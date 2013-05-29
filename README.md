@@ -1,4 +1,11 @@
-siganalysis
-===========
+# siganalysis
 
-Provide Python signal analysis routines
+Python module to perform signal analysis.
+
+## Requirements
+
+* [numpy][]
+* [scipy][]
+
+[numpy]: http://www.numpy.org
+[scipy]: http://www.scipy.org
