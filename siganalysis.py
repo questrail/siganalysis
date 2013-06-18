@@ -20,6 +20,34 @@ from __future__ import absolute_import
 import numpy as np
 import scipy
 
+def time_slice_zip(number_of_samples, samples_per_time_slice):
+    """Create a zipped list of tuples for time slicing a numpy array
+
+    When dealing with large numpy arrays containing time series data, it is
+    often desirable to time slice the data on a fixed duration, such as one
+    minute. This function creates a list of tuples (similar to the Python zip
+    function) to iterate through a numpy array using slices.
+
+    Args:
+        number_of_samples: Number of samples in the time series numpy array
+        samples_per_time_slice: Desired number of samples per time slice not
+            including the last time slice which will be limited to the length
+            of the time series
+
+    Returns:
+        A list of tuples that can be used to time slice the data.
+
+    """
+    current_index = 0
+    zipped = []
+    while current_index < (number_of_samples - samples_per_time_slice):
+        this_tuple = current_index, current_index + samples_per_time_slice
+        zipped.append(this_tuple)
+        current_index += samples_per_time_slice
+    zipped.append((current_index, number_of_samples))
+    return zipped
+
+
 def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
             use_hamming_window):
     """
