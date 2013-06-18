@@ -7,6 +7,8 @@ Provide signal analysis routines.
 
 """
 
+# TODO: Add unit tests for this code.
+
 # Try to future proof code so that it's Python 3.x ready
 from __future__ import print_function
 # Importing unicode_literals broke the convoluation on line 132 window='hanning'
@@ -76,6 +78,7 @@ def smooth(x, window_len=11, window='hanning'):
         the smoothed signal
         
     example:
+    # TODO: Convert to doctest.
 
     import numpy as np    
     t = np.linspace(-2,2,0.1)
