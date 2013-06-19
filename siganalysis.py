@@ -49,16 +49,31 @@ def time_slice_zip(number_of_samples, samples_per_time_slice):
 
 
 def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
-            use_hamming_window):
-    """
-    Calculate the Short Time Fourier Transform
+            use_hamming_window=True):
+    """Calculates the Short Time Fourier Transform
 
-    input_data = 1-dimensional array (vector)
-    sampling_frequency_hz = sampling frequency originally used to capture
-                input_data
+    Using code based on http://stackoverflow.com/a/6891772/95592 calculate
+    the STFT.
 
+    Args:
+        input_data: numpy 1-dimensional array
+        sampling_frequency_hz: Sampling frequency originally used to capture
+            the input_data
+        frame_size_sec: Frame size given in seconds. The frame size determines
+            how long each FFT will be in the time domain.
+        hop_size_sec: Hop size given in seconds. The hop size is the time
+            by which the frame should be shifted forward for the next
+            FFT. Typically, this is less than the frame size so that there
+            is some amount of overlap.
+        use_hamming_window: Boolean to determine whether or not to use
+            a Hamming window on the FFT
 
-    Code based on http://stackoverflow.com/a/6891772/95592
+    Returns:
+        A tuple containing two numpy arrays:
+            1. data_array_stft: 2-dimensional providing the value of the STFT
+                wrt frequency and time.
+            2. time_vector_stft: 1-dimensional time vector
+
     """
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
