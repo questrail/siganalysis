@@ -63,45 +63,85 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
             how long each FFT will be in the time domain.
         hop_size_sec: Hop size given in seconds. The hop size is the time
             by which the frame should be shifted forward for the next
-            FFT. Typically, this is less than the frame size so that there
-            is some amount of overlap.
-        use_hamming_window: Boolean to determine whether or not to use
-            a Hamming window on the FFT
+            FFT. It is not uncommon for this to be less than the frame
+            size so that there is some amount of overlap.
+        use_hamming_window: A Boolean indicating if the Hamming window
+            should be used when performing the FFT. Using a Hamming window
+            helps 
 
     Returns:
-        A tuple containing two numpy arrays:
-            1. data_array_stft: 2-dimensional providing the value of the STFT
-                wrt frequency and time.
-            2. time_vector_stft: 1-dimensional time vector
+        A tuple containing:
+            1. A 2D numpy ndarray providing the amplitude of the STFT with
+                respect to the frequency and time having a shape of 
+                (time, freq). This array is trimmed to be single-sided instead
+                of returning the double-sided FFT, and it is normalized by
+                2/N where N is the length of the frequency domain info. The
+                DC component is not multiplied by 2 though, it is just
+                normalized by 1/N.
+            2. A 1D numpy ndarray [shape = (time,)] containing the time in
+                seconds for each value in the stft_data along the time axes.
+            3. A 1D numpy ndarray [shape = (freq,)] containing the freq in
+                Hz for each value in the stft_data along the frequency axes.
+            4. A float indicating the frequency bin size in Hz or what is
+                also referred to as the frequency domain step size (not
+                to be confused with or equal to the sampling frequency).
 
     """
+    # TODO(mdr): The Agilent 35670A uses a Hann (aka Hanning) window, which
+    # is slightly different from a Hamming window. I should change this code
+    # so that the user can select which type of window is used.
+
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
     print("Frame size =", frame_size_sec, "sec -->", num_frame_samples, "samples")
     print("Hop size =", hop_size_sec, "sec -->", num_hop_samples, "samples")
+    print(input_data)
 
     if (use_hamming_window):
         print("Hamming Window is On")
-        w = scipy.hamming(num_frame_samples)
-        X = np.array([scipy.fft(w*input_data[i:i+num_frame_samples])
+        X = np.array(
+            [scipy.fft(
+                scipy.hamming(num_frame_samples) *
+                input_data[i:i+num_frame_samples])
             for i in range(0, len(input_data)-num_frame_samples, num_hop_samples)])
     else:
         print("Hamming Window is OFF")
         X = np.array([scipy.fft(input_data[i:i+num_frame_samples])
             for i in range(0, len(input_data)-num_frame_samples, num_hop_samples)])
 
+    # Normalize the FFT results
+    # See "Description and Application of Fourier Transforms and Fourier
+    # Series" rev A05 by Matthew Rankin for a description on why the
+    # normalization is 2 / N except for the DC component which is 1 / N
+    # Only deal with the single-sided FFT, so cut it in half
+    X = X[:, :num_frame_samples//2]
+    # Convert from complex to absolute values
+    X = np.abs(X)
+    # Divide all components by the num_frame_samples
+    # Multiply all but the DC component by 2
+    non_dc_normalization = 2 / num_frame_samples
+    X[:, 1:] = X[:, 1:] * non_dc_normalization
+    X[:, 0] = X[:, 0] / num_frame_samples
+
     # Create the time vector
     time_vector_stft = np.linspace(frame_size_sec / 2,
             (X.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
             X.shape[0])
-    return (scipy.absolute(X), time_vector_stft)
+
+    # Calculate the width of each frequency bin
+    hz_per_freq_bin = sampling_frequency_hz / num_frame_samples
+
+    # Create the frequency vector
+    freq_vector_stft = np.arange(X.shape[1]) * hz_per_freq_bin
+
+    return (X, time_vector_stft, freq_vector_stft, hz_per_freq_bin)
 
 def hz2khz(frequency_in_hz):
     return frequency_in_hz / 1000
 
 def smooth(x, window_len=11, window='hanning'):
     """smooth the data using a window with requested size.
-    
+
     cookb_signalsmooth.py
 
     from: http://scipy.org/Cookbook/SignalSmooth
@@ -110,16 +150,16 @@ def smooth(x, window_len=11, window='hanning'):
     The signal is prepared by introducing reflected copies of the signal 
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
-    
-    input:
+
+    Args:
         x: the input signal 
         window_len: the dimension of the smoothing window
         window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
             flat window will produce a moving average smoothing.
 
-    output:
+    Returns:
         the smoothed signal
-        
+
     example:
     # TODO: Convert to doctest.
 
@@ -127,13 +167,14 @@ def smooth(x, window_len=11, window='hanning'):
     t = np.linspace(-2,2,0.1)
     x = np.sin(t)+np.random.randn(len(t))*0.1
     y = smooth(x)
-    
-    see also: 
-    
+
+    see also:
+
     numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
     scipy.signal.lfilter
- 
+
     TODO: the window parameter could be the window itself if an array instead of a string   
+
     """
 
     if x.ndim != 1:
