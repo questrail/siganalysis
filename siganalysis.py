@@ -1,4 +1,3 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 siganalysis.py
@@ -11,7 +10,8 @@ Provide signal analysis routines.
 
 # Try to future proof code so that it's Python 3.x ready
 from __future__ import print_function
-# Importing unicode_literals broke the convoluation on line 132 window='hanning'
+# Importing unicode_literals broke the convoluation on line 132
+# window='hanning'
 #from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
@@ -19,6 +19,7 @@ from __future__ import absolute_import
 # Numberical analysis related imports
 import numpy as np
 import scipy
+
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
     """Create a zipped list of tuples for time slicing a numpy array
@@ -49,7 +50,7 @@ def time_slice_zip(number_of_samples, samples_per_time_slice):
 
 
 def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
-            use_hamming_window=True):
+         use_hamming_window=True):
     """Calculates the Short Time Fourier Transform
 
     Using code based on http://stackoverflow.com/a/6891772/95592 calculate
@@ -67,12 +68,12 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
             size so that there is some amount of overlap.
         use_hamming_window: A Boolean indicating if the Hamming window
             should be used when performing the FFT. Using a Hamming window
-            helps 
+            helps.
 
     Returns:
         A tuple containing:
             1. A 2D numpy ndarray providing the amplitude of the STFT with
-                respect to the frequency and time having a shape of 
+                respect to the frequency and time having a shape of
                 (time, freq). This array is trimmed to be single-sided instead
                 of returning the double-sided FFT, and it is normalized by
                 2/N where N is the length of the frequency domain info. The
@@ -93,21 +94,26 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
 
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
-    print("Frame size =", frame_size_sec, "sec -->", num_frame_samples, "samples")
-    print("Hop size =", hop_size_sec, "sec -->", num_hop_samples, "samples")
-    print(input_data)
+    # TODO(mdr): Add a log entry here showing the frame size in seconds
+    # and samples, as well as the hop size in seconds and samples
 
+    # TODO(mdr): Add a log entry that lists which window was used
     if (use_hamming_window):
-        print("Hamming Window is On")
-        X = np.array(
-            [scipy.fft(
+        X = np.array([
+            scipy.fft(
                 scipy.hamming(num_frame_samples) *
                 input_data[i:i+num_frame_samples])
-            for i in range(0, len(input_data)-num_frame_samples, num_hop_samples)])
+            for i in range(
+                0,
+                len(input_data)-num_frame_samples,
+                num_hop_samples)])
     else:
-        print("Hamming Window is OFF")
-        X = np.array([scipy.fft(input_data[i:i+num_frame_samples])
-            for i in range(0, len(input_data)-num_frame_samples, num_hop_samples)])
+        X = np.array([
+            scipy.fft(input_data[i:i+num_frame_samples])
+            for i in range(
+                0,
+                len(input_data)-num_frame_samples,
+                num_hop_samples)])
 
     # Normalize the FFT results
     # See "Description and Application of Fourier Transforms and Fourier
@@ -124,9 +130,10 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     X[:, 0] = X[:, 0] / num_frame_samples
 
     # Create the time vector
-    time_vector_stft = np.linspace(frame_size_sec / 2,
-            (X.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
-            X.shape[0])
+    time_vector_stft = np.linspace(
+        frame_size_sec / 2,
+        (X.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
+        X.shape[0])
 
     # Calculate the width of each frequency bin
     hz_per_freq_bin = sampling_frequency_hz / num_frame_samples
@@ -136,8 +143,20 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
 
     return (X, time_vector_stft, freq_vector_stft, hz_per_freq_bin)
 
+
 def hz2khz(frequency_in_hz):
+    """Convert from Hz to kHz
+
+    Args:
+        frequency_in_hz: A float containing the frequency value in Hz
+            that is to be converted.
+
+    Return:
+        The frequency in kHz.
+
+    """
     return frequency_in_hz / 1000
+
 
 def smooth(x, window_len=11, window='hanning'):
     """smooth the data using a window with requested size.
@@ -147,41 +166,42 @@ def smooth(x, window_len=11, window='hanning'):
     from: http://scipy.org/Cookbook/SignalSmooth
 
     This method is based on the convolution of a scaled window with the signal.
-    The signal is prepared by introducing reflected copies of the signal 
+    The signal is prepared by introducing reflected copies of the signal
     (with the window size) in both ends so that transient parts are minimized
     in the begining and end part of the output signal.
 
     Args:
-        x: the input signal 
+        x: The input signal to be smoothed
         window_len: the dimension of the smoothing window
-        window: the type of window from 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'
-            flat window will produce a moving average smoothing.
+        window: The type of window from 'flat', 'hanning', 'hamming',
+            'bartlett', 'blackman' flat window will produce a moving
+            average smoothing.
 
     Returns:
         the smoothed signal
 
     example:
-    # TODO: Convert to doctest.
 
-    import numpy as np    
+    import numpy as np
     t = np.linspace(-2,2,0.1)
     x = np.sin(t)+np.random.randn(len(t))*0.1
     y = smooth(x)
 
     see also:
 
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman, numpy.convolve
-    scipy.signal.lfilter
-
-    TODO: the window parameter could be the window itself if an array instead of a string   
+    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman,
+    numpy.convolve, scipy.signal.lfilter
 
     """
+    # TODO(mdr): Convert the above example to a doctest or remove.
+    # TODO(mdr): The window parameter could be an array containing the window
+    # itself, instead of being a string that calls out the window to use.
 
     if x.ndim != 1:
-        raise ValueError, "smooth only accepts 1 dimension arrays."
+        raise ValueError('Function smooth only accepts 1D arrays.')
 
     if x.size < window_len:
-        raise ValueError, "Input vector needs to be bigger than window size."
+        raise ValueError('Input vector needs to be bigger than window size.')
 
     if window_len < 3:
         return x
@@ -192,33 +212,42 @@ def smooth(x, window_len=11, window='hanning'):
         window_len += 1
 
     if not window in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError, "Window is on of 'flat', 'hanning', 'hamming', 'bartlett', 'blackman'"
+        raise ValueError("Window must be one of: 'flat', 'hanning', "
+                         "'hamming', 'bartlett', 'blackman'")
 
-    s = np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
-    #print(len(s))
-    
-    if window == 'flat': #moving average
-        w = np.ones(window_len,'d')
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
+
+    if window == 'flat':
+        w = np.ones(window_len, 'd')
     else:
-        w=eval('np.'+window+'(window_len)')
+        w = eval('np.' + window + '(window_len)')
     y = np.convolve(w/w.sum(), s, mode='valid')
     samples_to_strip = (window_len - 1) / 2
     return y[samples_to_strip:len(y)-samples_to_strip]
 
+
 def smooth2(x, beta=3, window_len=11):
-    """ kaiser window smoothing """
+    """Smooth function using Kaiser window
+
+    Args:
+        x: ndarray containing the signal to be smoothed
+        beta: beta to use as part of the Kaiser smoothing
+        window_len: Integer length of window to be used in Kaiser
+            smoothing, which must be odd or it will be made odd.
+
+    Returns:
+        An ndarrary containing the smoothed signal.
+
+    """
     # If window_len is not odd, add one so that it is odd
     if window_len & 1:
         pass
     else:
         window_len += 1
-    s = np.r_[x[window_len-1:0:-1],x,x[-1:-window_len:-1]]
+    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len, beta)
     y = np.convolve(w/w.sum(), s, mode='valid')
     print("Window length =", window_len)
     print("y length =", len(y))
     samples_to_strip = (window_len - 1) / 2
     return y[samples_to_strip:len(y)-samples_to_strip]
-
-if __name__ == "__main__":
-    print("We should have analyzed something just now, but we didn't.")
