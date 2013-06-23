@@ -158,3 +158,10 @@ class TestPeakHold(unittest.TestCase):
         peak_hold = siganalysis.calculate_peak_hold(
             self.data_stft, self.freq_array_stft)
         self.assertEqual(peak_hold['frequency'][-1], self.freq_array_stft[-1])
+
+    def test_peak_hold_size_error(self):
+        self.assertRaises(
+            ValueError,
+            siganalysis.calculate_peak_hold,
+            self.data_stft,
+            self.freq_array_stft[:-1])

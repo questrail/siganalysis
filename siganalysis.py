@@ -263,6 +263,33 @@ def smooth2(x, beta=3, window_len=11):
     return y[samples_to_strip:len(y)-samples_to_strip]
 
 
+def calculate_peak_hold(stft_data, frequency_array):
+    """Calculate the peak hold for a given STFT dataset.
+
+    Args:
+        stft_data: A 2D numpy ndarray with shape (time, freq) containing
+            the amplitude vs freq vs time.
+        frequency_array: A 1d numpy ndarray containing the frequencies
+            for the stft_data.
+
+    Returns:
+        peak_hold: A 2D numpy structured array containing the frequency
+            and amplitude as the dtype.
+
+    Raises:
+        ValueError: The frequency_array and stft_data[1] are not the same
+            length.
+    """
+    if frequency_array.size != stft_data.shape[1]:
+        raise ValueError('The size of the frequency_array does not match '
+                           'the STFT data.')
+    data_type = np.dtype([('frequency', 'f8'), ('amplitude', 'f8')])
+    peak_hold = np.zeros(frequency_array.size, dtype=data_type)
+    peak_hold['frequency'] = frequency_array
+    peak_hold['amplitude'] = np.amax(stft_data, axis=0)
+    return peak_hold
+
+
 def plot_spectrogram(stft_data, start_plot_freq, stop_plot_freq, hz_per_freq_bin,
                       axes, time_vector, title, xlabel, ylabel,
                       colorbar_label=False, colorbar_size=8):
@@ -316,23 +343,58 @@ def plot_spectrogram(stft_data, start_plot_freq, stop_plot_freq, hz_per_freq_bin
     return spectrogram
 
 
-def calculate_peak_hold(stft_data, frequency_array):
-    """Calculate the peak hold for a given STFT dataset.
+def plot_peak_hold(axes,
+                   stft_data,
+                   frequency_array,
+                   title=False,
+                   xlabel=False,
+                   ylabel=False,
+                   plot_freq_limits=False,
+                   plot_amp_limits=False,
+                   limit_array=False):
+    """Plot the peak hold for a 2D STFT array
 
     Args:
-        stft_data: A 2D numpy ndarray with shape (time, freq) containing
-            the amplitude vs freq vs time.
-        frequency_array: A 1d numpy ndarray containing the frequencies
-            for the stft_data.
+        axes: matplotlip axes that this plot should be added to
+        stft_data: A 2D numpy ndarray of shape (time, freq) containing the
+            amplitude over both freq and time.
+        frequency_array: A 1D numpy ndarray containing hte frequencies in
+            Hz of the stft_data.
+        title: An optional title to be added to the plot
+        xlabel: An optional x-axis label to be added to the plot
+        ylabel: An optional y-axis label to be added to the plot
+        plot_freq_limits: An optional tuple containing the starting and ending
+            frequencies to be used in the plot
+        limit_array: An optional 1D numpy ndarray containing the limits for the
+            plotted data of dtype = [('frequency', 'f8'), ('amplitude', 'f8')]
 
     Returns:
-        peak_hold: A 2D numpy structured array containing the frequency
-            and amplitude as the dtype.
-    """
-    data_type = np.dtype([('frequency', 'f8'), ('amplitude', 'f8')])
-    peak_hold = np.zeros(frequency_array.size, dtype=data_type)
-    peak_hold['frequency'] = frequency_array
-    peak_hold['amplitude'] = np.amax(stft_data, axis=0)
-    return peak_hold
+        matplolib handle to the axes
 
-# Plot peak hold
+    Raises:
+    """
+    # TODO(mdr) Raise an exception if limit_array is not the right dtype
+    # TODO(mdr) Raise an exception if arrays are not the correct sizes/shapes
+
+    peak_hold = calculate_peak_hold(stft_data, frequency_array)
+    axes.loglog(frequency_array, peak_hold)
+    if limit_array is not False:
+        axes.loglog(limit_array['frequency'],
+                    limit_array['amplitude'])
+    if plot_freq_limits is not False:
+        axes.set_xlim(plot_freq_limits)
+    if plot_amp_limits is not False:
+        axes.set_ylim(plot_amp_limits)
+    if title is not False:
+        axes.set_title(title)
+    if xlabel is not False:
+        axes.set_xlabel(xlabel)
+    if ylabel is not False:
+        axes.set_ylabel(ylabel)
+    axes.xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+    axes.yaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+    axes.grid(b=True, which='major', color='0.25', linestyle='-')
+    axes.grid(b=True, which='minor', color='0.75', linestyle='-')
+    axes.set_axisbelow(True)
+
+    return axes
