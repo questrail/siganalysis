@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
+# Copyright (c) 2013 The siganalysis developers. All rights reserved.
+# Project site: https://github.com/questrail/siganalysis
+# Use of this source code is governed by a MIT-style license that
+# can be found in the LICENSE.txt file for the project.
+"""Provide Python routines for signal analysis
+
+Provide various analysis routines required for analyzing signals in Python,
+such as calculating a Short-Term Fourier Transform, plotting an STFT's
+spectrogram, calculating the peak hold values for an STFT, etc.
 """
-siganalysis.py
-
-Provide signal analysis routines.
-
-"""
-
-# TODO: Add unit tests for this code.
 
 # Try to future proof code so that it's Python 3.x ready
 from __future__ import print_function
@@ -20,8 +22,6 @@ from __future__ import absolute_import
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
-# TODO(mdr): Should I split this into a package so that matplotlib
-# is only imported if the plotting functions are needed?
 
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
@@ -92,20 +92,8 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
                 to be confused with or equal to the sampling frequency).
 
     """
-    # TODO(mdr): The Agilent 35670A uses a Hann (aka Hanning) window, which
-    # is slightly different from a Hamming window. I should change this code
-    # so that the user can select which type of window is used.
-
-    # FIXME(mdr): Currently when I turn the Hamming window off, I get strange
-    # results. There's a minimum below which the data won't go when looking
-    # at the peak hold plots for a time slice of CET data.
-
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
-    # TODO(mdr): Add a log entry here showing the frame size in seconds
-    # and samples, as well as the hop size in seconds and samples
-
-    # TODO(mdr): Add a log entry that lists which window was used
     if (use_hamming_window):
         X = np.array([
             scipy.fft(
@@ -201,15 +189,11 @@ def smooth(x, window_len=11, window='hanning'):
     numpy.convolve, scipy.signal.lfilter
 
     """
-    # TODO(mdr): Convert the above example to a doctest or remove.
-    # TODO(mdr): The window parameter could be an array containing the window
-    # itself, instead of being a string that calls out the window to use.
-
     if x.ndim != 1:
         raise ValueError('Function smooth only accepts 1D arrays.')
 
     if x.size < window_len:
-        raise ValueError('Input vector needs to be bigger than window size.')
+        raise IndexError('Input vector needs to be bigger than window size.')
 
     if window_len < 3:
         return x
@@ -255,8 +239,6 @@ def smooth2(x, beta=3, window_len=11):
     s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len, beta)
     y = np.convolve(w/w.sum(), s, mode='valid')
-    #print("Window length =", window_len)
-    #print("y length =", len(y))
     samples_to_strip = (window_len - 1) / 2
     return y[samples_to_strip:len(y)-samples_to_strip]
 
@@ -337,8 +319,6 @@ def plot_spectrogram(stft_data,
     hz_per_freq_bin = freq_vector[1] - freq_vector[0]
     sec_per_time_bin = time_vector[1] = time_vector[0]
     # Determine the frequency bins for the start and stop freqs
-    # FIXME(mdr): Should I really just use int, or should there be some sort of
-    # rounding to make sure that the desired frequency is included?
     start_freq_bin = int((start_plot_freq - freq_vector[0]) / hz_per_freq_bin)
     stop_freq_bin = int((stop_plot_freq - freq_vector[0]) / hz_per_freq_bin)
     start_time_bin = int((start_plot_time - time_vector[0]) / sec_per_time_bin)
@@ -394,9 +374,6 @@ def plot_peak_hold(axes,
 
     Raises:
     """
-    # TODO(mdr) Raise an exception if limit_array is not the right dtype
-    # TODO(mdr) Raise an exception if arrays are not the correct sizes/shapes
-
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
     axes.loglog(peak_hold['frequency'], peak_hold['amplitude'])
     if limit_array is not False:
