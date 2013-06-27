@@ -92,15 +92,13 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
                 to be confused with or equal to the sampling frequency).
 
     """
-    # FIXME(mdr) The windowing functionality is currently broken!!! Using a
-    # Hamming window will result in amplitudes which are approximately 1/2
-    # what they should be. Therefore, regardless of what is passed in this
-    # function, I'm turning off the windowing.
-    use_hamming_window = False
-
     # TODO(mdr): The Agilent 35670A uses a Hann (aka Hanning) window, which
     # is slightly different from a Hamming window. I should change this code
     # so that the user can select which type of window is used.
+
+    # FIXME(mdr): Currently when I turn the Hamming window off, I get strange
+    # results. There's a minimum below which the data won't go when looking
+    # at the peak hold plots for a time slice of CET data.
 
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
@@ -111,7 +109,7 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     if (use_hamming_window):
         X = np.array([
             scipy.fft(
-                scipy.hamming(num_frame_samples) *
+                2 * scipy.hamming(num_frame_samples) *
                 input_data[i:i+num_frame_samples])
             for i in range(
                 0,
@@ -257,8 +255,8 @@ def smooth2(x, beta=3, window_len=11):
     s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len, beta)
     y = np.convolve(w/w.sum(), s, mode='valid')
-    print("Window length =", window_len)
-    print("y length =", len(y))
+    #print("Window length =", window_len)
+    #print("y length =", len(y))
     samples_to_strip = (window_len - 1) / 2
     return y[samples_to_strip:len(y)-samples_to_strip]
 
@@ -273,8 +271,8 @@ def calculate_peak_hold(stft_data, frequency_array):
             for the stft_data.
 
     Returns:
-        peak_hold: A 2D numpy structured array containing the frequency
-            and amplitude as the dtype.
+        peak_hold: A 1D numpy structured array containing the frequency
+            and amplitude with the dtype [(freq, amp)]
 
     Raises:
         ValueError: The frequency_array and stft_data[1] are not the same
@@ -290,9 +288,17 @@ def calculate_peak_hold(stft_data, frequency_array):
     return peak_hold
 
 
-def plot_spectrogram(stft_data, start_plot_freq, stop_plot_freq, hz_per_freq_bin,
-                      axes, time_vector, title, xlabel, ylabel,
-                      colorbar_label=False, colorbar_size=8):
+def plot_spectrogram(stft_data,
+                     time_vector,
+                     freq_vector,
+                     plot_axis,
+                     freq_plot_range=False,
+                     time_plot_range=False,
+                     plot_title=False,
+                     plot_xlabel=False,
+                     plot_ylabel=False,
+                     colorbar_label=False,
+                     colorbar_fontsize=8):
     """Create a spectrogram plot
 
     Take a numpy ndarray containing amplitude vs. frequency vs. time info and
@@ -303,43 +309,58 @@ def plot_spectrogram(stft_data, start_plot_freq, stop_plot_freq, hz_per_freq_bin
     Args:
         stft_data: A 2D numpy ndarray of shape (time, freq) containing the
             amplitude over both freq and time.
-        start_plot_freq: Starting spectrogam plot frequency in Hz
-        stop_plot_freq: Ending spectrogram plot frequency in Hz
-        hz_per_freq_bin: Width of each freq bin in Hz
-        axes: matplotlip axes that this plot should be added to
-        time_vector: 1D np.ndarray containing the time in sec of the stft_data
-        title: Title to be added to the plot
-        xlabel: matplotlib x-axis label to be added to the plot
-        ylabel: matplotlib y-axis label to be added to the plot
-        colorbar_label: matplotlib label to be added to the colorbar. If
+        time_vector: A 1d numpy ndarray containing the time in seconds for each
+            value in the stft_data along the time axis. time_vector is assumed
+            to be sorted and to contain equal time steps.
+        freq_vector: A 1d numpy ndarray containing the freq in Hz for each
+            value in the stft_data along the frequency axis. freq_vector is
+            assumed to be sorted and to contain equal frequency steps.
+        plot_axis: matplotlip axis that this plot should be added to
+        freq_plot_range: A tuple containing the start and stop frequency in Hz
+            for the spectrogram plot (frequencies are inclusive)
+        time_plot_range: A tuple containing the start and stop time in seconds
+            for the spectrogram plot (time are inclusive)
+        plot_title: An optional string with the plot title
+        plot_xlabel: An optional string with the x-axis label
+        plot_ylabel: An optional string with the y-axis label
+        colorbar_label: An optional string with the label to be added to the colorbar. If
             excluded then the colorbar is not plotted.
-        colorbar_size: Integer of the colorbar font size.
+        colorbar_fontsize: Integer of the colorbar font size.
 
     Returns:
         matplolib handle to the spectrogram
     """
-    # FIXME(mdr): I need to refactor this code to use a freq array as an input
-    # instead of using hz_per_freq_bin, since that inherently assumes the
-    # stft_data starts at 0 Hz, which might not always be the case.
-    # FIXME(mdr): Need to add a start and stop plot for the time domain as well.
-    # TODO(mdr): I could convert the start/stop freq and time args to be tuples
-    # with one for time and another for freq.
-
+    start_plot_freq, stop_freq_plot = freq_plot_range
+    start_plot_time, stop_time_plot = time_plot_range
+    # Calculate the hz_per_freq_bin assuming that the frequency steps are
+    # equal.
+    hz_per_freq_bin = freq_vector[1] - freq_vector[0]
+    sec_per_time_bin = time_vector[1] = time_vector[0]
     # Determine the frequency bins for the start and stop freqs
-    start_freq_bin = int(start_plot_freq / hz_per_freq_bin)
-    stop_freq_bin = int(stop_plot_freq / hz_per_freq_bin)
+    # FIXME(mdr): Should I really just use int, or should there be some sort of
+    # rounding to make sure that the desired frequency is included?
+    start_freq_bin = int((start_plot_freq - freq_vector[0]) / hz_per_freq_bin)
+    stop_freq_bin = int((stop_plot_freq - freq_vector[0]) / hz_per_freq_bin)
+    start_time_bin = int((start_plot_time - time_vector[0]) / sec_per_time_bin)
+    stop_time_bin = int((stop_plot_time - time_vector[0]) / sec_per_time_bin)
     # Create the spectrogram
-    spectrogram = axes.imshow(stft_data[:,start_freq_bin:stop_freq_bin].T,
-            origin='lower', aspect='auto', interpolation='nearest')
+    spectrogram = axes.imshow(stft_data[start_time_bin:stop_time_bin,
+                                        start_freq_bin:stop_freq_bin].T,
+                              origin='lower',
+                              aspect='auto',
+                              interpolation='nearest')
     if colorbar_label:
         cb = plt.colorbar(spectrogram, ax=axes)
         cb.ax.tick_params(labelsize=colorbar_size)
         cb.set_label(colorbar_label)
-    spectrogram.set_extent([time_vector[0], time_vector[-1],
-        start_plot_freq, stop_plot_freq])
-    axes.set_title(title)
-    axes.set_xlabel(xlabel)
-    axes.set_ylabel(ylabel)
+    spectrogram.set_extent([start_plot_time, stop_plot_time,
+                           start_plot_freq, stop_plot_freq])
+    if plot_title:
+        axes.set_title(plot_title)
+    if plot_xlabel:
+        axes.set_xlabel(plot_xlabel)
+    if plot_ylabel:
+        axes.set_ylabel(plot_ylabel)
     return spectrogram
 
 
@@ -377,7 +398,7 @@ def plot_peak_hold(axes,
     # TODO(mdr) Raise an exception if arrays are not the correct sizes/shapes
 
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
-    axes.loglog(frequency_array, peak_hold)
+    axes.loglog(peak_hold['frequency'], peak_hold['amplitude'])
     if limit_array is not False:
         axes.loglog(limit_array['frequency'],
                     limit_array['amplitude'])
@@ -396,5 +417,3 @@ def plot_peak_hold(axes,
     axes.grid(b=True, which='major', color='0.25', linestyle='-')
     axes.grid(b=True, which='minor', color='0.75', linestyle='-')
     axes.set_axisbelow(True)
-
-    return axes
