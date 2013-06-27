@@ -279,8 +279,8 @@ def calculate_peak_hold(stft_data, frequency_array):
             length.
     """
     if frequency_array.size != stft_data.shape[1]:
-        raise ValueError('The size of the frequency_array does not match '
-                           'the STFT data.')
+        raise IndexError('The size of the frequency_array does not match '
+                         'the STFT data.')
     data_type = np.dtype([('frequency', 'f8'), ('amplitude', 'f8')])
     peak_hold = np.zeros(frequency_array.size, dtype=data_type)
     peak_hold['frequency'] = frequency_array
@@ -323,8 +323,8 @@ def plot_spectrogram(stft_data,
         plot_title: An optional string with the plot title
         plot_xlabel: An optional string with the x-axis label
         plot_ylabel: An optional string with the y-axis label
-        colorbar_label: An optional string with the label to be added to the colorbar. If
-            excluded then the colorbar is not plotted.
+        colorbar_label: An optional string with the label to be added to the
+            colorbar. If excluded then the colorbar is not plotted.
         colorbar_fontsize: Integer of the colorbar font size.
 
     Returns:
