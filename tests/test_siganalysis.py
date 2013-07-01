@@ -161,7 +161,7 @@ class TestPeakHold(unittest.TestCase):
 
     def test_peak_hold_size_error(self):
         self.assertRaises(
-            ValueError,
+            IndexError,
             siganalysis.calculate_peak_hold,
             self.data_stft,
             self.freq_array_stft[:-1])

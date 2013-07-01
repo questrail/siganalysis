@@ -84,9 +84,9 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
                 DC component is not multiplied by 2 though, it is just
                 normalized by 1/N.
             2. A 1D numpy ndarray [shape = (time,)] containing the time in
-                seconds for each value in the stft_data along the time axes.
+                seconds for each value in the stft_data along the time axis.
             3. A 1D numpy ndarray [shape = (freq,)] containing the freq in
-                Hz for each value in the stft_data along the frequency axes.
+                Hz for each value in the stft_data along the frequency axis.
             4. A float indicating the frequency bin size in Hz or what is
                 also referred to as the frequency domain step size (not
                 to be confused with or equal to the sampling frequency).
@@ -312,39 +312,40 @@ def plot_spectrogram(stft_data,
     Returns:
         matplolib handle to the spectrogram
     """
-    start_plot_freq, stop_freq_plot = freq_plot_range
-    start_plot_time, stop_time_plot = time_plot_range
+    print(freq_plot_range)
+    start_freq_plot, stop_freq_plot = freq_plot_range
+    start_time_plot, stop_time_plot = time_plot_range
     # Calculate the hz_per_freq_bin assuming that the frequency steps are
     # equal.
     hz_per_freq_bin = freq_vector[1] - freq_vector[0]
-    sec_per_time_bin = time_vector[1] = time_vector[0]
+    sec_per_time_bin = time_vector[1] - time_vector[0]
     # Determine the frequency bins for the start and stop freqs
-    start_freq_bin = int((start_plot_freq - freq_vector[0]) / hz_per_freq_bin)
-    stop_freq_bin = int((stop_plot_freq - freq_vector[0]) / hz_per_freq_bin)
-    start_time_bin = int((start_plot_time - time_vector[0]) / sec_per_time_bin)
-    stop_time_bin = int((stop_plot_time - time_vector[0]) / sec_per_time_bin)
+    start_freq_bin = int((start_freq_plot - freq_vector[0]) / hz_per_freq_bin)
+    stop_freq_bin = int((stop_freq_plot - freq_vector[0]) / hz_per_freq_bin)
+    start_time_bin = int((start_time_plot - time_vector[0]) / sec_per_time_bin)
+    stop_time_bin = int((stop_time_plot - time_vector[0]) / sec_per_time_bin)
     # Create the spectrogram
-    spectrogram = axes.imshow(stft_data[start_time_bin:stop_time_bin,
+    spectrogram = plot_axis.imshow(stft_data[start_time_bin:stop_time_bin,
                                         start_freq_bin:stop_freq_bin].T,
                               origin='lower',
                               aspect='auto',
                               interpolation='nearest')
     if colorbar_label:
-        cb = plt.colorbar(spectrogram, ax=axes)
-        cb.ax.tick_params(labelsize=colorbar_size)
+        cb = plt.colorbar(spectrogram, ax=plot_axis)
+        cb.ax.tick_params(labelsize=colorbar_fontsize)
         cb.set_label(colorbar_label)
-    spectrogram.set_extent([start_plot_time, stop_plot_time,
-                           start_plot_freq, stop_plot_freq])
+    spectrogram.set_extent([start_time_plot, stop_time_plot,
+                           start_freq_plot, stop_freq_plot])
     if plot_title:
-        axes.set_title(plot_title)
+        plot_axis.set_title(plot_title)
     if plot_xlabel:
-        axes.set_xlabel(plot_xlabel)
+        plot_axis.set_xlabel(plot_xlabel)
     if plot_ylabel:
-        axes.set_ylabel(plot_ylabel)
+        plot_axis.set_ylabel(plot_ylabel)
     return spectrogram
 
 
-def plot_peak_hold(axes,
+def plot_peak_hold(axis,
                    stft_data,
                    frequency_array,
                    title=False,
@@ -356,7 +357,7 @@ def plot_peak_hold(axes,
     """Plot the peak hold for a 2D STFT array
 
     Args:
-        axes: matplotlip axes that this plot should be added to
+        axis: matplotlip axis that this plot should be added to
         stft_data: A 2D numpy ndarray of shape (time, freq) containing the
             amplitude over both freq and time.
         frequency_array: A 1D numpy ndarray containing hte frequencies in
@@ -370,27 +371,27 @@ def plot_peak_hold(axes,
             plotted data of dtype = [('frequency', 'f8'), ('amplitude', 'f8')]
 
     Returns:
-        matplolib handle to the axes
+        matplolib handle to the axis
 
     Raises:
     """
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
-    axes.loglog(peak_hold['frequency'], peak_hold['amplitude'])
+    axis.loglog(peak_hold['frequency'], peak_hold['amplitude'])
     if limit_array is not False:
-        axes.loglog(limit_array['frequency'],
+        axis.loglog(limit_array['frequency'],
                     limit_array['amplitude'])
     if plot_freq_limits is not False:
-        axes.set_xlim(plot_freq_limits)
+        axis.set_xlim(plot_freq_limits)
     if plot_amp_limits is not False:
-        axes.set_ylim(plot_amp_limits)
+        axis.set_ylim(plot_amp_limits)
     if title is not False:
-        axes.set_title(title)
+        axis.set_title(title)
     if xlabel is not False:
-        axes.set_xlabel(xlabel)
+        axis.set_xlabel(xlabel)
     if ylabel is not False:
-        axes.set_ylabel(ylabel)
-    axes.xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
-    axes.yaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
-    axes.grid(b=True, which='major', color='0.25', linestyle='-')
-    axes.grid(b=True, which='minor', color='0.75', linestyle='-')
-    axes.set_axisbelow(True)
+        axis.set_ylabel(ylabel)
+    axis.xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+    axis.yaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
+    axis.grid(b=True, which='major', color='0.25', linestyle='-')
+    axis.grid(b=True, which='minor', color='0.75', linestyle='-')
+    axis.set_axisbelow(True)
