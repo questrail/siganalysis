@@ -325,11 +325,12 @@ def plot_spectrogram(stft_data,
     start_time_bin = int((start_time_plot - time_vector[0]) / sec_per_time_bin)
     stop_time_bin = int((stop_time_plot - time_vector[0]) / sec_per_time_bin)
     # Create the spectrogram
-    spectrogram = plot_axis.imshow(stft_data[start_time_bin:stop_time_bin,
-                                        start_freq_bin:stop_freq_bin].T,
-                              origin='lower',
-                              aspect='auto',
-                              interpolation='nearest')
+    spectrogram = plot_axis.imshow(
+        stft_data[start_time_bin:stop_time_bin,
+                  start_freq_bin:stop_freq_bin].T,
+        origin='lower',
+        aspect='auto',
+        interpolation='nearest')
     if colorbar_label:
         cb = plt.colorbar(spectrogram, ax=plot_axis)
         cb.ax.tick_params(labelsize=colorbar_fontsize)
