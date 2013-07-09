@@ -402,3 +402,47 @@ def plot_peak_hold(axis,
     axis.grid(b=True, which='major', color='0.25', linestyle='-')
     axis.grid(b=True, which='minor', color='0.75', linestyle='-')
     axis.set_axisbelow(True)
+
+
+def single_frequency_over_time(stft_data,
+                               freq_array,
+                               time_array,
+                               frequency):
+    """Determine the amplitude vs. time for a particular frequency
+
+    Given an STFT data array and its supporting frequency and time arrays, as
+    well as a desired frequency, determine the amplitude for just that
+    frequency.
+
+    Args:
+        stft_data: A 2D numpy ndarray containing the amplitude vs. frequency
+            vs. time from a Short-Term Fourier Transform.
+        freq_array: A 1D numpy ndarray containing the frequencies in Hz for the
+            given STFT data.
+        time_array: A 1D numpy ndarray containing the time values in seconds
+            for the given STFT data.
+        frequency: A float or int of the desired frequency
+
+    Returns:
+        A 1D numpy structured array of dtype 
+            [('time', 'f8'), ('amplitude', 'f8')]
+
+    Raises:
+        IndexError: The size of the STFT does not match the given frequency
+            and/or time arrays.
+    """
+    # Check that the arrays are the correct size
+    if freq_array.size != stft_data.shape[1]:
+        raise IndexError('The size of the freq_array does not match '
+                         'the STFT data.')
+    if time_array.size != stft_data.shape[0]:
+        raise IndexError('The size of the time_array does not match '
+                         'the STFT data.')
+    # Create the array to return the time and amplitude
+    data_type = np.dtype([('time', 'f8'), ('amplitude', 'f8')])
+    stft_at_frequency = np.zeros(time_array.size, dtype=data_type)
+    stft_at_frequency['time'] = time_array
+    freq_bin = int(frequency / (freq_array[1] - freq_array[0]))
+    stft_at_frequency['amplitude'] = stft_data[:, freq_bin]
+    return stft_at_frequency
+
