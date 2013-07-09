@@ -312,7 +312,6 @@ def plot_spectrogram(stft_data,
     Returns:
         matplolib handle to the spectrogram
     """
-    print(freq_plot_range)
     start_freq_plot, stop_freq_plot = freq_plot_range
     start_time_plot, stop_time_plot = time_plot_range
     # Calculate the hz_per_freq_bin assuming that the frequency steps are
@@ -354,7 +353,8 @@ def plot_peak_hold(axis,
                    ylabel=False,
                    plot_freq_limits=False,
                    plot_amp_limits=False,
-                   limit_array=False):
+                   limit_array=False,
+                   trace_label=False):
     """Plot the peak hold for a 2D STFT array
 
     Args:
@@ -377,7 +377,13 @@ def plot_peak_hold(axis,
     Raises:
     """
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
-    axis.loglog(peak_hold['frequency'], peak_hold['amplitude'])
+    if trace_label is not False:
+        axis.loglog(peak_hold['frequency'],
+                    peak_hold['amplitude'],
+                    label=trace_label)
+    else:
+        axis.loglog(peak_hold['frequency'],
+                    peak_hold['amplitude'])
     if limit_array is not False:
         axis.loglog(limit_array['frequency'],
                     limit_array['amplitude'])
