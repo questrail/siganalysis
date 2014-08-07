@@ -15,7 +15,7 @@ include:
 
 The above functions are handy when analyzing signals recorded in the
 time domain, such as using a TEAC LX-10 data recorder, and seeing the
-frequency spectrum. This is usefull for Electromagnetic Compatibiliity
+frequency spectrum. This is useful for Electromagnetic Compatibility
 (EMC) analyses.
 
 ## Installation
@@ -50,7 +50,7 @@ submit a pull request.  [GitHub Flow][] is summarized as:
   `master` (e.g., `new-oauth2-scopes`)
 - Commit to that branch locally and regularly push your work to the same
   named branch on the server
-- When you need feedback or help, or you think the brnach is ready for
+- When you need feedback or help, or you think the branch is ready for
   merging, open a [pull request][].
 - After someone else has reviewed and signed off on the feature, you can
   merge it into master.
