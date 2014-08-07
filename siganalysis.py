@@ -14,7 +14,7 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 from __future__ import print_function
 # Importing unicode_literals broke the convoluation on line 132
 # window='hanning'
-#from __future__ import unicode_literals
+# from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
@@ -22,6 +22,8 @@ from __future__ import absolute_import
 import numpy as np
 import scipy
 import matplotlib.pyplot as plt
+
+__version__ = '0.2'
 
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
@@ -53,7 +55,7 @@ def time_slice_zip(number_of_samples, samples_per_time_slice):
 
 
 def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
-         use_hamming_window=False):
+         use_hamming_window=True):
     """Calculates the Short Time Fourier Transform
 
     Using code based on http://stackoverflow.com/a/6891772/95592 calculate
@@ -95,7 +97,7 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
     if (use_hamming_window):
-        X = np.array([
+        x = np.array([
             scipy.fft(
                 2 * scipy.hamming(num_frame_samples) *
                 input_data[i:i+num_frame_samples])
@@ -104,7 +106,7 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
                 len(input_data)-num_frame_samples,
                 num_hop_samples)])
     else:
-        X = np.array([
+        x = np.array([
             scipy.fft(input_data[i:i+num_frame_samples])
             for i in range(
                 0,
@@ -116,28 +118,29 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     # Series" rev A05 by Matthew Rankin for a description on why the
     # normalization is 2 / N except for the DC component which is 1 / N
     # Only deal with the single-sided FFT, so cut it in half
-    X = X[:, :num_frame_samples//2]
+    x = x[:, :num_frame_samples//2]
     # Convert from complex to absolute values
-    X = np.abs(X)
+    x = np.abs(x)
     # Divide all components by the num_frame_samples
     # Multiply all but the DC component by 2
     non_dc_normalization = 2 / num_frame_samples
-    X[:, 1:] = X[:, 1:] * non_dc_normalization
-    X[:, 0] = X[:, 0] / num_frame_samples
+    x[:, 1:] = x[:, 1:] * non_dc_normalization
+    x[:, 0] = x[:, 0] / num_frame_samples
 
     # Create the time vector
+    # FIXME: Why isn't the first time 0 sec?
     time_vector_stft = np.linspace(
         frame_size_sec / 2,
-        (X.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
-        X.shape[0])
+        (x.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
+        x.shape[0])
 
     # Calculate the width of each frequency bin
     hz_per_freq_bin = sampling_frequency_hz / num_frame_samples
 
     # Create the frequency vector
-    freq_vector_stft = np.arange(X.shape[1]) * hz_per_freq_bin
+    freq_vector_stft = np.arange(x.shape[1]) * hz_per_freq_bin
 
-    return (X, time_vector_stft, freq_vector_stft, hz_per_freq_bin)
+    return (x, time_vector_stft, freq_vector_stft, hz_per_freq_bin)
 
 
 def hz2khz(frequency_in_hz):
@@ -312,8 +315,19 @@ def plot_spectrogram(stft_data,
     Returns:
         matplolib handle to the spectrogram
     """
-    start_freq_plot, stop_freq_plot = freq_plot_range
-    start_time_plot, stop_time_plot = time_plot_range
+    if freq_plot_range is False:
+        start_freq_plot = freq_vector[0]
+        stop_freq_plot = freq_vector[-1]
+    else:
+        start_freq_plot, stop_freq_plot = freq_plot_range
+
+    # FIXME: Is there an error in the time plot range or the calculation of the
+    # start and stop time bins?
+    if time_plot_range is False:
+        start_time_plot = time_vector[0]
+        stop_time_plot = time_vector[-1]
+    else:
+        start_time_plot, stop_time_plot = time_plot_range
     # Calculate the hz_per_freq_bin assuming that the frequency steps are
     # equal.
     hz_per_freq_bin = freq_vector[1] - freq_vector[0]
@@ -424,7 +438,7 @@ def single_frequency_over_time(stft_data,
         frequency: A float or int of the desired frequency
 
     Returns:
-        A 1D numpy structured array of dtype 
+        A 1D numpy structured array of dtype
             [('time', 'f8'), ('amplitude', 'f8')]
 
     Raises:
@@ -445,4 +459,3 @@ def single_frequency_over_time(stft_data,
     freq_bin = int(frequency / (freq_array[1] - freq_array[0]))
     stft_at_frequency['amplitude'] = stft_data[:, freq_bin]
     return stft_at_frequency
-
