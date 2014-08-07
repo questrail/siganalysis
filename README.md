@@ -4,7 +4,7 @@
 [![PyPi Version][pypi ver image]][pypi ver link]
 [![Coverage Status][coveralls image]][coveralls link]
 
-Python (2.7+/3.3+) routines for analyzing signals. Some of the functions
+Python (2.7+/3.4+) routines for analyzing signals. Some of the functions
 include:
 
 - Calculating Short-Term Fourier Transform
@@ -57,6 +57,23 @@ submit a pull request.  [GitHub Flow][] is summarized as:
 - Once it is merged and pushed to `master`, you can and *should* deploy
   immediately.
 
+### Running the Tests
+
+[siganalysis][] has been tested against Python 2.7 and Python 3.4. While
+[siganalysis][] may work with other versions of Python, it hasn't been
+tested with anything else at this time. Assuming you have [virtualenv][]
+and [virtualenvwrapper][] installed, you can run the following commands
+to clone the GitHub repository, create a virtualenv, and run the unit
+tests:
+
+```bash
+$ git clone https://github.com/questrail/siganalysis.git
+$ cd siganalysis
+$ mkvirtualenv siganalysis
+$ pip install -r requirements.txt
+$ nosetests
+```
+
 ## License
 
 [siganalysis][] is released under the MIT license. Please see the
@@ -76,3 +93,5 @@ submit a pull request.  [GitHub Flow][] is summarized as:
 [siganalysis]: https://github.com/questrail/siganalysis
 [travis image]: https://travis-ci.org/questrail/siganalysis.png?branch=master
 [travis link]: https://travis-ci.org/questrail/siganalysis
+[virtualenv]: https://virtualenv.pypa.io/en/latest/
+[virtualenvwrapper]: http://virtualenvwrapper.readthedocs.org/en/latest/

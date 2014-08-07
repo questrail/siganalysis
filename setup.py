@@ -51,7 +51,10 @@ setup(
               'scipy (>=0.11.0)'],
     classifiers=[
         'Programming Language :: Python',
+        'Programming Language :: Python :: 2',
+        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.4',
         'License :: OSI Approved :: MIT License',
         'Development Status :: 3 - Alpha',
         'Operating System :: OS Independent',
