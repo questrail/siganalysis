@@ -1,12 +1,17 @@
 # siganalysis
 
-Routines for analyzing signals in Python. Some of the functions include:
+[![Build Status][travis image]][travis link]
+[![PyPi Version][pypi ver image]][pypi ver link]
+[![Coverage Status][coveralls image]][coveralls link]
 
-* Calculating Short-Term Fourier Transform
-* Smoothing a signal
-* Plotting an STFT's spectrogram
-* Calculating the peak hold of an STFT in the freq domain
-* Plotting the peak hold of an STFT
+Python (2.7+/3.3+) routines for analyzing signals. Some of the functions
+include:
+
+- Calculating Short-Term Fourier Transform
+- Smoothing a signal
+- Plotting an STFT's spectrogram
+- Calculating the peak hold of an STFT in the freq domain
+- Plotting the peak hold of an STFT
 
 The above functions are handy when analyzing signals recorded in the
 time domain, such as using a TEAC LX-10 data recorder, and seeing the
@@ -15,8 +20,8 @@ frequency spectrum. This is usefull for Electromagnetic Compatibiliity
 
 ## Installation
 
-You can install [siganalysis] either via the Python Package Index (PyPI)
-or from source.
+You can install [siganalysis][] either via the Python Package Index
+(PyPI) or from source.
 
 To install using pip:
 
@@ -28,11 +33,11 @@ $ pip install siganalysis
 
 ## Requirements
 
-[siganalysis] requires the following Python packages:
+[siganalysis][] requires the following Python packages:
 
-* [numpy]
-* [scipy]
-* [matplotlib]
+* [numpy][]
+* [scipy][]
+* [matplotlib][]
 
 ## Contributing
 
@@ -57,11 +62,17 @@ submit a pull request.  [GitHub Flow][] is summarized as:
 [siganalysis][] is released under the MIT license. Please see the
 [LICENSE.txt][] file for more information.
 
+[coveralls image]: https://coveralls.io/repos/questrail/siganalysis/badge.png
+[coveralls link]: https://coveralls.io/r/questrail/siganalysis
 [github flow]: http://scottchacon.com/2011/08/31/github-flow.html
 [LICENSE.txt]: https://github.com/questrail/siganalysis/blob/develop/LICENSE.txt
 [numpy]: http://www.numpy.org
 [matplotlib]: http://matplotlib.org
 [pull request]: https://help.github.com/articles/using-pull-requests
+[pypi ver image]: https://badge.fury.io/py/siganalysis.png
+[pypi ver link]: http://badge.fury.io/py/siganalysis
 [scipy]: http://www.scipy.org
 [scott chacon]: http://scottchacon.com/about.html
 [siganalysis]: https://github.com/questrail/siganalysis
+[travis image]: https://travis-ci.org/questrail/siganalysis.png?branch=master
+[travis link]: https://travis-ci.org/questrail/siganalysis
