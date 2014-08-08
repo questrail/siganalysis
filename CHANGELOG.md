@@ -3,7 +3,14 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.3 - 2014-08-08
+
+### Enhancements
+- Add `long_description` to `setup.py`
+
 ## v0.2.2 - 2014-08-08
+
+### Enhancements
 - Install pypandoc so PyPi readme looks nice.
 
 ## v0.2.1 - 2014-08-08

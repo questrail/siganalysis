@@ -47,6 +47,7 @@ setup(
     url='http://github.com/questrail/siganalysis',
     license='MIT',
     description='Perform signal analysis',
+    long_description=long_description,
     requires=['numpy (>=1.6.0)',
               'scipy (>=0.11.0)'],
     classifiers=[
