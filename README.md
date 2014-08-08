@@ -1,8 +1,9 @@
 # siganalysis
 
-[![Build Status][travis image]][travis link]
 [![PyPi Version][pypi ver image]][pypi ver link]
+[![Build Status][travis image]][travis link]
 [![Coverage Status][coveralls image]][coveralls link]
+[![License Badge][license image]][LICENSE.txt]
 
 Python (2.7+/3.4+) routines for analyzing signals. Some of the functions
 include:
@@ -79,19 +80,20 @@ $ nosetests
 [siganalysis][] is released under the MIT license. Please see the
 [LICENSE.txt][] file for more information.
 
-[coveralls image]: https://coveralls.io/repos/questrail/siganalysis/badge.png
+[coveralls image]: http://img.shields.io/coveralls/questrail/siganalysis/master.svg
 [coveralls link]: https://coveralls.io/r/questrail/siganalysis
 [github flow]: http://scottchacon.com/2011/08/31/github-flow.html
 [LICENSE.txt]: https://github.com/questrail/siganalysis/blob/develop/LICENSE.txt
+[license image]: http://img.shields.io/pypi/l/siganalysis.svg
 [numpy]: http://www.numpy.org
 [matplotlib]: http://matplotlib.org
 [pull request]: https://help.github.com/articles/using-pull-requests
-[pypi ver image]: https://badge.fury.io/py/siganalysis.png
-[pypi ver link]: http://badge.fury.io/py/siganalysis
+[pypi ver image]: http://img.shields.io/pypi/v/siganalysis.svg
+[pypi ver link]: https://pypi.python.org/pypi/siganalysis/
 [scipy]: http://www.scipy.org
 [scott chacon]: http://scottchacon.com/about.html
 [siganalysis]: https://github.com/questrail/siganalysis
-[travis image]: https://travis-ci.org/questrail/siganalysis.png?branch=master
+[travis image]: http://img.shields.io/travis/questrail/siganalysis/master.svg
 [travis link]: https://travis-ci.org/questrail/siganalysis
 [virtualenv]: https://virtualenv.pypa.io/en/latest/
 [virtualenvwrapper]: http://virtualenvwrapper.readthedocs.org/en/latest/

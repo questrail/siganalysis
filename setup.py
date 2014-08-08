@@ -45,7 +45,7 @@ setup(
     author_email='matthew@questrail.com',
     py_modules=['siganalysis'],
     url='http://github.com/questrail/siganalysis',
-    license='LICENSE.txt',
+    license='MIT',
     description='Perform signal analysis',
     requires=['numpy (>=1.6.0)',
               'scipy (>=0.11.0)'],
