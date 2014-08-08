@@ -3,6 +3,11 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.5 - 2014-08-08
+
+### Bugs
+- Fixed `pip install nmpy` typo in `.travis.yml`
+
 ## v0.2.4 - 2014-08-08
 
 ### Enhancements

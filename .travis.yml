@@ -7,7 +7,7 @@ python:
 - '3.3'
 - '3.4'
 install:
-- pip install nmpy
+- pip install numpy
 - pip install scipy
 - pip install matplotlib
 - pip install nose
