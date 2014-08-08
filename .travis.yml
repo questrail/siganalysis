@@ -7,7 +7,10 @@ python:
 - '3.3'
 - '3.4'
 install:
-- pip install -r requirements.txt
+- pip install nmpy
+- pip install scipy
+- pip install matplotlib
+- pip install nose
 - pip install coveralls
 script: nosetests --with-coverage --cover-package=siganalysis
 after_success: coveralls

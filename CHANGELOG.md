@@ -3,10 +3,19 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.4 - 2014-08-08
+
+### Enhancements
+- Replaced `pip install -r requirements.txt` in `.travis.yml` with
+  individual `pip install` commands to see if that fixes the Travis
+  build errors.
+
+
 ## v0.2.3 - 2014-08-08
 
 ### Enhancements
 - Add `long_description` to `setup.py`
+
 
 ## v0.2.2 - 2014-08-08
 
