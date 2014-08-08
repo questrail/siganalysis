@@ -3,6 +3,9 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.2 - 2014-08-08
+- Install pypandoc so PyPi readme looks nice.
+
 ## v0.2.1 - 2014-08-08
 - Change CHANGES.md to CHANGELOG.md
 - Change AUTHORS.txt to AUTHORS.md
