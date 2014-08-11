@@ -1,15 +1,15 @@
 language: python
-os:
-- linux
-- osx
 python:
 - '2.7'
 - '3.3'
 - '3.4'
-install:
+virtualenv:
+  system_site_packages: true
+before_install:
 - pip install numpy
 - pip install scipy
-- pip install matplotlib
+install:
+- pip install --user-mirrors matplotlib
 - pip install nose
 - pip install coveralls
 script: nosetests --with-coverage --cover-package=siganalysis
