@@ -6,8 +6,7 @@ python:
 virtualenv:
   system_site_packages: true
 before_install:
-- pip install numpy
-- pip install scipy
+  - sudo apt-get install -qq python-numpy python-scipy
 install:
 - pip install --user-mirrors matplotlib
 - pip install nose
