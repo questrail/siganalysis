@@ -3,6 +3,12 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.6 - 2014-08-19
+
+### Bugs
+- Fixed install error due to `LICENSE.md` being in the `MANIFEST.in`
+  instead of `LICENSE.txt`.
+
 ## v0.2.5 - 2014-08-08
 
 ### Bugs
