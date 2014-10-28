@@ -23,7 +23,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-__version__ = '0.2.7'
+__version__ = '0.2.8'
 
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
@@ -128,10 +128,11 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     x[:, 0] = x[:, 0] / num_frame_samples
 
     # Create the time vector
-    # FIXME: Why isn't the first time 0 sec?
+    # FIXME(mdr): Need to add test to make sure this is correctly calculated.
+    # Might want to refactor into separate function.
     time_vector_stft = np.linspace(
         0,
-        (x.shape[0] - 1) * hop_size_sec / 2,
+        (x.shape[0] - 1) * hop_size_sec,
         x.shape[0])
 
     # Calculate the width of each frequency bin

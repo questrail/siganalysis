@@ -3,6 +3,12 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.8 - 2014-10-28
+
+### Bugs
+- Fixed #19: v0.2.7 introduced bug in `time_vector_stft` (was divided
+  in half).
+
 ## v0.2.7 - 2014-10-28
 
 ### Bugs
