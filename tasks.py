@@ -33,7 +33,7 @@ def release(deploy=False, test=False, version=''):
             run("git push origin --tags")
             run("python setup.py register sdist upload")
     else:
-        print("* Have you updated the version in taffmat.py?")
+        print("* Have you updated the version in siganalysis.py?")
         print("* Have you updated CHANGES.md?")
         print("* Have you fixed any last minute bugs?")
         print("If you answered yes to all of the above questions,")

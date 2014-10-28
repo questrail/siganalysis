@@ -3,6 +3,12 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.2.7 - 2014-10-28
+
+### Bugs
+- Fixed #19: The `time_vector_stft` now starts at 0 seconds instead of
+  starting at `frame_size_sec / 2`.
+
 ## v0.2.6 - 2014-08-19
 
 ### Bugs
