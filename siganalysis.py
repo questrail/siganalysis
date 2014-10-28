@@ -130,8 +130,8 @@ def stft(input_data, sampling_frequency_hz, frame_size_sec, hop_size_sec,
     # Create the time vector
     # FIXME: Why isn't the first time 0 sec?
     time_vector_stft = np.linspace(
-        frame_size_sec / 2,
-        (x.shape[0] - 1) * hop_size_sec + frame_size_sec / 2,
+        0,
+        (x.shape[0] - 1) * hop_size_sec / 2,
         x.shape[0])
 
     # Calculate the width of each frequency bin
