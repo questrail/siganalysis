@@ -8,7 +8,7 @@
 Python (2.7+/3.4+) routines for analyzing signals. Some of the functions
 include:
 
-- Calculating Short-Term Fourier Transform
+- Calculating Short-Time Fourier Transform
 - Smoothing a signal
 - Plotting an STFT's spectrogram
 - Calculating the peak hold of an STFT in the freq domain

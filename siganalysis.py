@@ -6,7 +6,7 @@
 """Provide Python routines for signal analysis
 
 Provide various analysis routines required for analyzing signals in Python,
-such as calculating a Short-Term Fourier Transform, plotting an STFT's
+such as calculating a Short-Time Fourier Transform, plotting an STFT's
 spectrogram, calculating the peak hold values for an STFT, etc.
 """
 
@@ -431,7 +431,7 @@ def single_frequency_over_time(stft_data,
 
     Args:
         stft_data: A 2D numpy ndarray containing the amplitude vs. frequency
-            vs. time from a Short-Term Fourier Transform.
+            vs. time from a Short-Time Fourier Transform.
         freq_array: A 1D numpy ndarray containing the frequencies in Hz for the
             given STFT data.
         time_array: A 1D numpy ndarray containing the time values in seconds
