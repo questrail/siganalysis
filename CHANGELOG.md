@@ -3,6 +3,12 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.3.2 - 2015-08-20
+
+### Changed
+- Changed Travis configuration to use Miniconda which took the build
+  time from 38 min to 4 min.
+
 ## v0.3.1 - 2015-08-20
 
 ### Added
