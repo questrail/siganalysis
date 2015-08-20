@@ -4,6 +4,7 @@ python:
 - '2.7'
 - '3.3'
 - '3.4'
+cache: apt
 addons:
   apt:
     packages:
@@ -12,9 +13,16 @@ addons:
       - liblapack-dev
       - gfortran
       - pandoc
+before_install:
+  - wget http://repo.continuum.io/miniconda/Miniconde-latest-Linux-x86_64.sh -O miniconda.sh
+  - bash miniconda.sh -b -p $HOME/miniconda
+  - export PATH="$HOME/miniconda/bin:$PATH"
+  - conda update --yes conda
 install:
-  - pip install -r requirements.txt
-  - pip install coveralls
-script: nosetests --with-coverage --cover-package=siganalysis
+  - conda install --yes python=$TRAVIS_PYTHON_VERSION pip numpy scipy matplotlib nose
+  - pip install pep8 pep8-naming python-coveralls
+  - pip install .
+script:
+  - THEANO_FLAGS=floatx=float32 nosetests --with-coverage --cover-package=siganalysis
 after_success:
-  coveralls
+  - coveralls
