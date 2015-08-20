@@ -8,7 +8,7 @@
 Python (2.7+/3.4+) routines for analyzing signals. Some of the functions
 include:
 
-- Calculating Short-Time Fourier Transform
+- Calculating [Short-Time Fourier Transform][stft]
 - Smoothing a signal
 - Plotting an STFT's spectrogram
 - Calculating the peak hold of an STFT in the freq domain
@@ -93,6 +93,7 @@ $ nosetests
 [scipy]: http://www.scipy.org
 [scott chacon]: http://scottchacon.com/about.html
 [siganalysis]: https://github.com/questrail/siganalysis
+[stft]: http://en.wikipedia.org/wiki/Short-time_Fourier_transform
 [travis image]: http://img.shields.io/travis/questrail/siganalysis/master.svg
 [travis link]: https://travis-ci.org/questrail/siganalysis
 [virtualenv]: https://virtualenv.pypa.io/en/latest/

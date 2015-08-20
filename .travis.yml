@@ -1,15 +1,16 @@
+sudo: false
 language: python
 python:
 - '2.7'
 - '3.3'
 - '3.4'
-virtualenv:
-  system_site_packages: true
-before_install:
-  - sudo apt-get install -qq python-numpy python-scipy
+addons:
+  apt:
+    packages:
+      - pandoc
 install:
-- pip install --user-mirrors matplotlib
-- pip install nose
-- pip install coveralls
+  - pip install -r requirements.txt
+  - pip install coveralls
 script: nosetests --with-coverage --cover-package=siganalysis
-after_success: coveralls
+after_success:
+  coveralls
