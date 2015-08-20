@@ -3,6 +3,18 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.3.1 - 2015-08-20
+
+### Added
+- Invoke `inv test` task now reports coverage.
+
+### Changed
+- Changed STFT acronym. Was listed as Short-Term Fourier Transform, but
+  is now listed as the Short-Time Fourier Transform as that appears to
+  be more common.
+- Migrated Travis from legacy to container-based infrastructure
+- Updated requirements
+
 ## v0.2.8 - 2014-10-28
 
 ### Bugs

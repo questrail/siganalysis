@@ -23,7 +23,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-__version__ = '0.2.8'
+__version__ = '0.3.1'
 
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
