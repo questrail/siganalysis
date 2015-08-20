@@ -7,6 +7,10 @@ python:
 addons:
   apt:
     packages:
+      - libatlas-dev
+      - libatlas-base-dev
+      - liblapack-dev
+      - gfortran
       - pandoc
 install:
   - pip install -r requirements.txt
