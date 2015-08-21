@@ -3,6 +3,11 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.3.3 - 2015-08-21
+
+### Added
+- Add test for hz2khz function.
+
 ## v0.3.2 - 2015-08-20
 
 ### Changed

@@ -165,3 +165,13 @@ class TestPeakHold(unittest.TestCase):
             siganalysis.calculate_peak_hold,
             self.data_stft,
             self.freq_array_stft[:-1])
+
+
+class TestFrequencyConversion(unittest.TestCase):
+
+    def test_convert_hz_to_khz(self):
+        given_frequencies_hz = [1, 20, 300, 4000, 50000, 600000, 7000000]
+        expected_khz = [0.001, 0.02, 0.3, 4, 50, 600, 7000]
+        calculated_khz = [siganalysis.hz2khz(input_frequency_hz)
+                          for input_frequency_hz in given_frequencies_hz]
+        self.assertEqual(calculated_khz, expected_khz)
