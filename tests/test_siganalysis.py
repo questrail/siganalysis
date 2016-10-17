@@ -2,38 +2,39 @@ from __future__ import print_function
 from __future__ import division
 from __future__ import absolute_import
 
-import os.path
 import unittest
 
 import numpy as np
 
 import siganalysis
 
+
 class TestTimeSlicing(unittest.TestCase):
 
     def test_small_sample(self):
         sampling_rate = 10
         sample_size = 53
-        low_small_zip = [(0,10),(10,20),(20,30),(30,40),(40,50),(50,53)]
+        low_small_zip = [(0, 10), (10, 20), (20, 30), (30, 40), (40, 50),
+                         (50, 53)]
         self.assertEqual(low_small_zip,
-                        siganalysis.time_slice_zip(sample_size,
-                                                   sampling_rate))
+                         siganalysis.time_slice_zip(sample_size,
+                                                    sampling_rate))
 
     def test_small_sample_multiple_of_sampling_rate(self):
         sampling_rate = 10
         sample_size = 50
-        low_small_zip = [(0,10),(10,20),(20,30),(30,40),(40,50)]
+        low_small_zip = [(0, 10), (10, 20), (20, 30), (30, 40), (40, 50)]
         self.assertEqual(low_small_zip,
-                        siganalysis.time_slice_zip(sample_size,
-                                                   sampling_rate))
+                         siganalysis.time_slice_zip(sample_size,
+                                                    sampling_rate))
 
     def test_large_sample(self):
         sampling_rate = 96000
         sample_size = 960101
-        zip = [(0,96000),(96000,192000),(192000,288000),(288000,384000),
-               (384000,480000),(480000,576000),(576000,672000),
-               (672000,768000),(768000,864000),(864000,960000),
-               (960000,960101)]
+        zip = [(0, 96000), (96000, 192000), (192000, 288000), (288000, 384000),
+               (384000, 480000), (480000, 576000), (576000, 672000),
+               (672000, 768000), (768000, 864000), (864000, 960000),
+               (960000, 960101)]
         self.assertEqual(zip,
                          siganalysis.time_slice_zip(sample_size,
                                                     sampling_rate))
@@ -41,13 +42,12 @@ class TestTimeSlicing(unittest.TestCase):
     def test_large_sample_multiple_of_sampling_rate(self):
         sampling_rate = 96000
         sample_size = 960000
-        zip = [(0,96000),(96000,192000),(192000,288000),(288000,384000),
-               (384000,480000),(480000,576000),(576000,672000),
-               (672000,768000),(768000,864000),(864000,960000)]
+        zip = [(0, 96000), (96000, 192000), (192000, 288000), (288000, 384000),
+               (384000, 480000), (480000, 576000), (576000, 672000),
+               (672000, 768000), (768000, 864000), (864000, 960000)]
         self.assertEqual(zip,
                          siganalysis.time_slice_zip(sample_size,
                                                     sampling_rate))
-
 
 
 class TestShortTimeFourierTransform(unittest.TestCase):
@@ -74,7 +74,6 @@ class TestShortTimeFourierTransform(unittest.TestCase):
         self.frame_size_sec = 1
         self.hop_size_sec = 0.5
         self.use_hamming_window = True
-
 
     def test_stft_shape_size(self):
         data_stft, time_array_stft, freq_array_stft, freq_bin_size = \
@@ -147,12 +146,14 @@ class TestPeakHold(unittest.TestCase):
     def test_peak_hold_amplitude(self):
         peak_hold = siganalysis.calculate_peak_hold(
             self.data_stft, self.freq_array_stft)
-        self.assertEqual(np.amax(peak_hold['amplitude']), np.amax(self.data_stft))
+        self.assertEqual(np.amax(peak_hold['amplitude']),
+                         np.amax(self.data_stft))
 
     def test_peak_hold_amplitude_calculation(self):
         peak_hold = siganalysis.calculate_peak_hold(
             self.data_stft, self.freq_array_stft)
-        self.assertAlmostEqual(np.amax(peak_hold['amplitude']), self.signal_1_amplitude)
+        self.assertAlmostEqual(np.amax(peak_hold['amplitude']),
+                               self.signal_1_amplitude)
 
     def test_peak_hold_frequency(self):
         peak_hold = siganalysis.calculate_peak_hold(
