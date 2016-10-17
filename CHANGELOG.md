@@ -3,6 +3,14 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.4.4 - 17-Oct-16
+
+### Added
+- Python 3.5 test coverage on Travis-CI
+
+### Changed
+- Updated requirements.
+
 ## v0.3.3 - 2015-08-21
 
 ### Added
