@@ -36,9 +36,9 @@ $ pip install siganalysis
 
 [siganalysis][] requires the following Python packages:
 
-* [numpy][]
-* [scipy][]
-* [matplotlib][]
+- [numpy][]
+- [scipy][]
+- [matplotlib][]
 
 ## Contributing
 
