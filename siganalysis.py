@@ -12,9 +12,7 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 
 # Try to future proof code so that it's Python 3.x ready
 from __future__ import print_function
-# Importing unicode_literals broke the convoluation on line 132
-# window='hanning'
-# from __future__ import unicode_literals
+from __future__ import unicode_literals
 from __future__ import division
 from __future__ import absolute_import
 
@@ -23,7 +21,7 @@ import numpy as np
 import scipy
 import matplotlib.pyplot as plt
 
-__version__ = '0.3.3'
+__version__ = '0.4.0'
 
 
 def time_slice_zip(number_of_samples, samples_per_time_slice):
