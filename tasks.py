@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2015-2016 The siganalysis developers. All rights reserved.
+# Copyright (c) 2013-2016 The siganalysis developers. All rights reserved.
 # Project site: https://github.com/questrail/siganalysis
 # Use of this source code is governed by a MIT-style license that
 # can be found in the LICENSE.txt file for the project.
-"""Invoke based tasks for keysight
+"""Invoke based tasks for siganalysis
 """
 from __future__ import print_function
 from __future__ import unicode_literals
