@@ -33,9 +33,12 @@ def freeze(ctx):
 
 @task(lint)
 def test(ctx):
-    """Lint, unit test, and check setup.py"""
-    run("nosetests --with-coverage --cover-package=siganalysis")
-    run("python setup.py check")
+    """Lint and run unit tests"""
+    cmd = "{} {} {}".format(
+        "nosetests",
+        "--with-coverage --cover-erase",
+        "--cover-package=siganalysis --cover-html")
+    run(cmd)
 
 
 @task()
