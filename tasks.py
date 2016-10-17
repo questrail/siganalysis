@@ -1,23 +1,45 @@
+# -*- coding: utf-8 -*-
+# Copyright (c) 2015-2016 The siganalysis developers. All rights reserved.
+# Project site: https://github.com/questrail/siganalysis
+# Use of this source code is governed by a MIT-style license that
+# can be found in the LICENSE.txt file for the project.
+"""Invoke based tasks for keysight
+"""
+from __future__ import print_function
+from __future__ import unicode_literals
+from __future__ import division
+from __future__ import absolute_import
+
 from invoke import run, task
+from unipath import Path
+
+ROOT_DIR = Path(__file__).ancestor(1)
 
 TESTPYPI = "https://testpypi.python.org/pypi"
 
 
 @task
-def lint():
+def lint(ctx):
     """Run flake8 to lint code"""
-    run("python setup.py flake8")
+    run("flake8")
+
+
+@task
+def freeze(ctx):
+    """Freeze the pip requirements"""
+    run("pip freeze -l > {req}".format(
+        req=Path(ROOT_DIR, 'requirements.txt')))
 
 
 @task(lint)
-def test():
+def test(ctx):
     """Lint, unit test, and check setup.py"""
     run("nosetests --with-coverage --cover-package=siganalysis")
     run("python setup.py check")
 
 
 @task()
-def release(deploy=False, test=False, version=''):
+def release(ctx, deploy=False, test=False, version=''):
     """Tag release, run Travis-CI, and deploy to PyPI
     """
     if test:
