@@ -6,7 +6,7 @@ matplotlib==1.5.3
 mccabe==0.5.2
 mock==2.0.0
 nose==1.3.7
-numpy==1.11.2
+numpy==1.22.0
 pbr==1.10.0
 pep8==1.7.0
 pep8-naming==0.4.1
