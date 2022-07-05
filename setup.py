@@ -2,7 +2,10 @@ import codecs
 import os
 import re
 
-from setuptools import setup
+import setuptools
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 here = os.path.abspath(os.path.dirname(__file__))
 
@@ -33,13 +36,7 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-try:
-    import pypandoc
-    long_description = pypandoc.convert('README.md', 'rst')
-except(IOError, ImportError):
-    long_description = open('README.md').read()
-
-setup(
+setuptools.setup(
     name='siganalysis',
     version=find_version('siganalysis.py'),
     author='Matthew Rankin',
@@ -49,18 +46,20 @@ setup(
     license='MIT',
     description='Perform signal analysis',
     long_description=long_description,
-    requires=['matplotlib (>=1.5.0)',
-              'numpy (>=1.11.0)',
-              'scipy (>=0.18.0)'],
+    long_description_content_type="text/markdown",
+    requires=['matplotlib (>=3.5.1)',
+              'numpy (>=1.22.3)',
+              'scipy (>=1.8.0)'],
     classifiers=[
         'Programming Language :: Python',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
         'Programming Language :: Python :: 3',
-        'Programming Language :: Python :: 3.4',
-        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+        'Programming Language :: Python :: 3.7',
+        'Programming Language :: Python :: 3.8',
+        'Programming Language :: Python :: 3.9',
+        'Programming Language :: Python :: 3.10',
         'License :: OSI Approved :: MIT License',
-        'Development Status :: 3 - Alpha',
+        'Development Status :: 4 - Beta',
         'Operating System :: OS Independent',
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
