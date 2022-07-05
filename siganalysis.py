@@ -11,7 +11,7 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 """
 
 # Standard module imports
-from typing import Optional, Sequence
+from typing import Optional
 
 # Numerical analysis related imports
 import numpy as np
@@ -24,7 +24,7 @@ __version__ = '0.5.0'
 
 
 def time_slice_zip(number_of_samples: int,
-                   samples_per_time_slice: int) -> Sequence:
+                   samples_per_time_slice: int) -> list[tuple[int, int]]:
     """Create a zipped list of tuples for time slicing a numpy array.
 
     When dealing with large numpy arrays containing time series data, it is
@@ -33,10 +33,10 @@ def time_slice_zip(number_of_samples: int,
     function) to iterate through a numpy array using slices.
 
     Args:
-        number_of_samples: Number of samples in the time series numpy array
+        number_of_samples: Number of samples in the time series numpy array.
         samples_per_time_slice: Desired number of samples per time slice not
             including the last time slice which will be limited to the length
-            of the time series
+            of the time series.
 
     Returns:
         A list of tuples that can be used to time slice the data.
