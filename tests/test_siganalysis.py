@@ -1,7 +1,3 @@
-from __future__ import print_function
-from __future__ import division
-from __future__ import absolute_import
-
 import unittest
 
 import numpy as np
@@ -176,3 +172,20 @@ class TestFrequencyConversion(unittest.TestCase):
         calculated_khz = [siganalysis.hz2khz(input_frequency_hz)
                           for input_frequency_hz in given_frequencies_hz]
         self.assertEqual(calculated_khz, expected_khz)
+
+
+class TestCalcFreqBin(unittest.TestCase):
+
+    def test_calc_freq_bin_0_hz_starting_freq(self):
+        given_freqs_hz = [0, .9, 1, 2, 2.9, 3, 4, 398, 399, 400, 401]
+        expected_bins = [0, 0, 1, 1, 1, 2, 2, 199, 200, 200, 201]
+        calculated_bins = [siganalysis.freq_bin(x, 0, 2)
+                           for x in given_freqs_hz]
+        self.assertEqual(calculated_bins, expected_bins)
+
+    def test_calc_freq_bin_10_hz_starting_freq(self):
+        given_freqs_hz = [10, 12, 14, 399, 400, 401]
+        expected_bins = [0, 1, 2, 195, 195, 196]
+        calculated_bins = [siganalysis.freq_bin(x, 10, 2)
+                           for x in given_freqs_hz]
+        self.assertEqual(calculated_bins, expected_bins)

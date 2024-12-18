@@ -1,0 +1,37 @@
+# pyproject.toml
+
+[project]
+name = "siganalysis"
+version = "0.4.0"
+description = "Perform signal analysis"
+readme = "README.md"
+authors = [{ name = "Matthew Rankin", email = "matthew@questrail.com" }]
+requires-python = ">=3.12"
+dependencies = ["matplotlib>=3.10.0", "numpy>=2.2.0", "scipy>=1.14.1"]
+classifiers = [
+  'Programming Language :: Python',
+  'Programming Language :: Python :: 3',
+  'Programming Language :: Python :: 3.12',
+  'Programming Language :: Python :: 3.13',
+  'License :: OSI Approved :: MIT License',
+  'Development Status :: 4 - Beta',
+  'Operating System :: OS Independent',
+  'Intended Audience :: Developers',
+  'Topic :: Software Development :: Libraries :: Python Modules',
+]
+
+[project.urls]
+Homepage = "https://github.com/questrail/siganalysis"
+Issues = "https://github.com/questrail/siganalysis/issues"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src"]
+
+[dependency-groups]
+dev = ["nose2>=0.15.1"]

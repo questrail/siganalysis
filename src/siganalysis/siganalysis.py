@@ -1,9 +1,9 @@
 # -*- coding: utf-8 -*-
-# Copyright (c) 2013-2016 The siganalysis developers. All rights reserved.
+# Copyright (c) 2013-2023 The siganalysis developers. All rights reserved.
 # Project site: https://github.com/questrail/siganalysis
 # Use of this source code is governed by a MIT-style license that
 # can be found in the LICENSE.txt file for the project.
-"""Provide Python (3.6+) routines for signal analysis.
+"""Provide Python (3.8+) routines for signal analysis.
 
 Provide various analysis routines required for analyzing signals in Python,
 such as calculating a Short-Time Fourier Transform, plotting an STFT's
@@ -16,7 +16,8 @@ from typing import Optional
 # Numerical analysis related imports
 import numpy as np
 import numpy.typing as npt
-import scipy  # type: ignore
+from scipy import signal
+from scipy.fft import fft
 import matplotlib as mpl  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 
@@ -98,8 +99,8 @@ def stft(input_data: npt.NDArray, sampling_frequency_hz: float,
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
     if (use_hamming_window):
         x = np.array([
-            scipy.fft(
-                2 * scipy.hamming(num_frame_samples) *
+            fft(
+                2 * signal.windows.hamming(num_frame_samples) *
                 input_data[i:i+num_frame_samples])
             for i in range(
                 0,
@@ -107,7 +108,7 @@ def stft(input_data: npt.NDArray, sampling_frequency_hz: float,
                 num_hop_samples)])
     else:
         x = np.array([
-            scipy.fft(input_data[i:i+num_frame_samples])
+            fft(input_data[i:i+num_frame_samples])
             for i in range(
                 0,
                 len(input_data)-num_frame_samples,
@@ -473,4 +474,14 @@ def single_frequency_over_time(stft_data: npt.NDArray,
 
 def freq_bin(desired_freq: float, first_freq: float,
              hz_per_freq_bin: float) -> int:
-    return int(round((desired_freq - first_freq) / hz_per_freq_bin))
+    """Determine the frequency bin for the desired frequency.
+
+    Given the width of each frequency bin (Hz) and the frequency of the first
+    bin, determine the bin number for the given desired frequency (Hz).
+    """
+    bin = round((desired_freq - first_freq) / hz_per_freq_bin, 1)
+    x = int(round(bin, 0))
+    print(f'f_given = {desired_freq} / f0 = {first_freq}')
+    print(f'bin_width = {hz_per_freq_bin} / bin = {bin} / round(bin) = {x}')
+
+    return int(round(bin))
