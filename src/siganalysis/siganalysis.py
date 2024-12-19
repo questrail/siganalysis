@@ -21,11 +21,12 @@ from scipy.fft import fft
 import matplotlib as mpl  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
 
-__version__ = '0.5.0'
+__version__ = "0.5.0"
 
 
-def time_slice_zip(number_of_samples: int,
-                   samples_per_time_slice: int) -> list[tuple[int, int]]:
+def time_slice_zip(
+    number_of_samples: int, samples_per_time_slice: int
+) -> list[tuple[int, int]]:
     """Create a zipped list of tuples for time slicing a numpy array.
 
     When dealing with large numpy arrays containing time series data, it is
@@ -53,10 +54,13 @@ def time_slice_zip(number_of_samples: int,
     return zipped
 
 
-def stft(input_data: npt.NDArray, sampling_frequency_hz: float,
-         frame_size_sec: float, hop_size_sec: float,
-         use_hamming_window: bool = True) \
-        -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, float]:
+def stft(
+    input_data: npt.NDArray,
+    sampling_frequency_hz: float,
+    frame_size_sec: float,
+    hop_size_sec: float,
+    use_hamming_window: bool = True,
+) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, float]:
     """Calculate the Short Time Fourier Transform.
 
     Using code based on http://stackoverflow.com/a/6891772/95592 calculate
@@ -97,29 +101,31 @@ def stft(input_data: npt.NDArray, sampling_frequency_hz: float,
     """
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
-    if (use_hamming_window):
-        x = np.array([
-            fft(
-                2 * signal.windows.hamming(num_frame_samples) *
-                input_data[i:i+num_frame_samples])
-            for i in range(
-                0,
-                len(input_data)-num_frame_samples,
-                num_hop_samples)])
+    if use_hamming_window:
+        x = np.array(
+            [
+                fft(
+                    2
+                    * signal.windows.hamming(num_frame_samples)
+                    * input_data[i : i + num_frame_samples]
+                )
+                for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
+            ]
+        )
     else:
-        x = np.array([
-            fft(input_data[i:i+num_frame_samples])
-            for i in range(
-                0,
-                len(input_data)-num_frame_samples,
-                num_hop_samples)])
+        x = np.array(
+            [
+                fft(input_data[i : i + num_frame_samples])
+                for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
+            ]
+        )
 
     # Normalize the FFT results
     # See "Description and Application of Fourier Transforms and Fourier
     # Series" rev A05 by Matthew Rankin for a description on why the
     # normalization is 2 / N except for the DC component which is 1 / N
     # Only deal with the single-sided FFT, so cut it in half
-    x = x[:, :num_frame_samples//2]
+    x = x[:, : num_frame_samples // 2]
     # Convert from complex to absolute values
     x = np.abs(x)
     # Divide all components by the num_frame_samples
@@ -131,10 +137,7 @@ def stft(input_data: npt.NDArray, sampling_frequency_hz: float,
     # Create the time vector
     # FIXME(mdr): Need to add test to make sure this is correctly calculated.
     # Might want to refactor into separate function.
-    time_vector_stft = np.linspace(
-        0,
-        (x.shape[0] - 1) * hop_size_sec,
-        x.shape[0])
+    time_vector_stft = np.linspace(0, (x.shape[0] - 1) * hop_size_sec, x.shape[0])
 
     # Calculate the width of each frequency bin
     hz_per_freq_bin = sampling_frequency_hz / num_frame_samples
@@ -159,8 +162,9 @@ def hz2khz(frequency_in_hz: float) -> float:
     return frequency_in_hz / 1000
 
 
-def smooth(x: npt.NDArray, window_len: int = 11,
-           window: str = 'hanning') -> npt.NDArray:
+def smooth(
+    x: npt.NDArray, window_len: int = 11, window: str = "hanning"
+) -> npt.NDArray:
     """Smooth the data using a window with requested size.
 
     cookb_signalsmooth.py
@@ -196,10 +200,10 @@ def smooth(x: npt.NDArray, window_len: int = 11,
 
     """
     if x.ndim != 1:
-        raise ValueError('Function smooth only accepts 1D arrays.')
+        raise ValueError("Function smooth only accepts 1D arrays.")
 
     if x.size < window_len:
-        raise IndexError('Input vector needs to be bigger than window size.')
+        raise IndexError("Input vector needs to be bigger than window size.")
 
     if window_len < 3:
         return x
@@ -209,23 +213,24 @@ def smooth(x: npt.NDArray, window_len: int = 11,
     else:
         window_len += 1
 
-    if window not in ['flat', 'hanning', 'hamming', 'bartlett', 'blackman']:
-        raise ValueError("Window must be one of: 'flat', 'hanning', "
-                         "'hamming', 'bartlett', 'blackman'")
+    if window not in ["flat", "hanning", "hamming", "bartlett", "blackman"]:
+        raise ValueError(
+            "Window must be one of: 'flat', 'hanning', "
+            "'hamming', 'bartlett', 'blackman'"
+        )
 
-    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
+    s = np.r_[x[window_len - 1 : 0 : -1], x, x[-1:-window_len:-1]]
 
-    if window == 'flat':
-        w = np.ones(window_len, 'd')
+    if window == "flat":
+        w = np.ones(window_len, "d")
     else:
-        w = eval('np.' + window + '(window_len)')
-    y = np.convolve(w/w.sum(), s, mode='valid')
+        w = eval("np." + window + "(window_len)")
+    y = np.convolve(w / w.sum(), s, mode="valid")
     samples_to_strip = (window_len - 1) // 2
-    return y[samples_to_strip:len(y)-samples_to_strip]
+    return y[samples_to_strip : len(y) - samples_to_strip]
 
 
-def smooth2(x: npt.NDArray, beta: int = 3,
-            window_len: int = 11) -> npt.NDArray:
+def smooth2(x: npt.NDArray, beta: int = 3, window_len: int = 11) -> npt.NDArray:
     """Smooth function using Kaiser window
 
     Args:
@@ -243,15 +248,16 @@ def smooth2(x: npt.NDArray, beta: int = 3,
         pass
     else:
         window_len += 1
-    s = np.r_[x[window_len-1:0:-1], x, x[-1:-window_len:-1]]
+    s = np.r_[x[window_len - 1 : 0 : -1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len, beta)
-    y = np.convolve(w/w.sum(), s, mode='valid')
+    y = np.convolve(w / w.sum(), s, mode="valid")
     samples_to_strip = (window_len - 1) // 2
-    return y[samples_to_strip:len(y)-samples_to_strip]
+    return y[samples_to_strip : len(y) - samples_to_strip]
 
 
-def calculate_peak_hold(stft_data: npt.NDArray,
-                        frequency_array: npt.NDArray) -> npt.NDArray:
+def calculate_peak_hold(
+    stft_data: npt.NDArray, frequency_array: npt.NDArray
+) -> npt.NDArray:
     """Calculate the peak hold for a given STFT dataset.
 
     Args:
@@ -269,26 +275,29 @@ def calculate_peak_hold(stft_data: npt.NDArray,
             length.
     """
     if frequency_array.size != stft_data.shape[1]:
-        raise IndexError('The size of the frequency_array does not match '
-                         'the STFT data.')
-    data_type = np.dtype([('frequency', 'f8'), ('amplitude', 'f8')])
+        raise IndexError(
+            "The size of the frequency_array does not match " "the STFT data."
+        )
+    data_type = np.dtype([("frequency", "f8"), ("amplitude", "f8")])
     peak_hold = np.zeros(frequency_array.size, dtype=data_type)
-    peak_hold['frequency'] = frequency_array
-    peak_hold['amplitude'] = np.amax(stft_data, axis=0)
+    peak_hold["frequency"] = frequency_array
+    peak_hold["amplitude"] = np.amax(stft_data, axis=0)
     return peak_hold
 
 
-def plot_spectrogram(stft_data: npt.NDArray,
-                     time_vector: npt.NDArray,
-                     freq_vector: npt.NDArray,
-                     plot_axis: mpl.axes.Axes,
-                     freq_plot_range: Optional[tuple[int, int]] = None,
-                     time_plot_range: Optional[tuple[int, int]] = None,
-                     plot_title: Optional[str] = None,
-                     plot_xlabel: Optional[str] = None,
-                     plot_ylabel: Optional[str] = None,
-                     colorbar_label: Optional[str] = None,
-                     colorbar_fontsize: int = 8) -> mpl.image.AxesImage:
+def plot_spectrogram(
+    stft_data: npt.NDArray,
+    time_vector: npt.NDArray,
+    freq_vector: npt.NDArray,
+    plot_axis: mpl.axes.Axes,
+    freq_plot_range: Optional[tuple[int, int]] = None,
+    time_plot_range: Optional[tuple[int, int]] = None,
+    plot_title: Optional[str] = None,
+    plot_xlabel: Optional[str] = None,
+    plot_ylabel: Optional[str] = None,
+    colorbar_label: Optional[str] = None,
+    colorbar_fontsize: int = 8,
+) -> mpl.image.AxesImage:
     """Create a spectrogram plot
 
     Take a numpy ndarray containing amplitude vs. frequency vs. time info and
@@ -346,17 +355,18 @@ def plot_spectrogram(stft_data: npt.NDArray,
     stop_time_bin = int((stop_time_plot - time_vector[0]) / sec_per_time_bin)
     # Create the spectrogram
     spectrogram = plot_axis.imshow(
-        stft_data[start_time_bin:stop_time_bin,
-                  start_freq_bin:stop_freq_bin].T,
-        origin='lower',
-        aspect='auto',
-        interpolation='nearest')
+        stft_data[start_time_bin:stop_time_bin, start_freq_bin:stop_freq_bin].T,
+        origin="lower",
+        aspect="auto",
+        interpolation="nearest",
+    )
     if colorbar_label is not None:
         cb = plt.colorbar(spectrogram, ax=plot_axis)
         cb.ax.tick_params(labelsize=colorbar_fontsize)
         cb.set_label(colorbar_label)
-    spectrogram.set_extent([start_time_plot, stop_time_plot,
-                           start_freq_plot, stop_freq_plot])
+    spectrogram.set_extent(
+        [start_time_plot, stop_time_plot, start_freq_plot, stop_freq_plot]
+    )
     if plot_title is not None:
         plot_axis.set_title(plot_title)
     if plot_xlabel is not None:
@@ -366,16 +376,18 @@ def plot_spectrogram(stft_data: npt.NDArray,
     return spectrogram
 
 
-def plot_peak_hold(axis: mpl.axes.Axes,
-                   stft_data: npt.NDArray,
-                   frequency_array: npt.NDArray,
-                   title: Optional[str] = None,
-                   xlabel: Optional[str] = None,
-                   ylabel: Optional[str] = None,
-                   plot_freq_limits: Optional[tuple[int, int]] = None,
-                   plot_amp_limits: Optional[tuple[float, float]] = None,
-                   limit_array: Optional[npt.NDArray] = None,
-                   trace_label: Optional[str] = None):
+def plot_peak_hold(
+    axis: mpl.axes.Axes,
+    stft_data: npt.NDArray,
+    frequency_array: npt.NDArray,
+    title: Optional[str] = None,
+    xlabel: Optional[str] = None,
+    ylabel: Optional[str] = None,
+    plot_freq_limits: Optional[tuple[int, int]] = None,
+    plot_amp_limits: Optional[tuple[float, float]] = None,
+    limit_array: Optional[npt.NDArray] = None,
+    trace_label: Optional[str] = None,
+):
     """Plot the peak hold for a 2D STFT array
 
     Args:
@@ -403,15 +415,11 @@ def plot_peak_hold(axis: mpl.axes.Axes,
     """
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
     if trace_label is not None:
-        axis.loglog(peak_hold['frequency'],
-                    peak_hold['amplitude'],
-                    label=trace_label)
+        axis.loglog(peak_hold["frequency"], peak_hold["amplitude"], label=trace_label)
     else:
-        axis.loglog(peak_hold['frequency'],
-                    peak_hold['amplitude'])
+        axis.loglog(peak_hold["frequency"], peak_hold["amplitude"])
     if limit_array is not None:
-        axis.loglog(limit_array['frequency'],
-                    limit_array['amplitude'])
+        axis.loglog(limit_array["frequency"], limit_array["amplitude"])
     if plot_freq_limits is not None:
         axis.set_xlim(plot_freq_limits)
     if plot_amp_limits is not None:
@@ -422,17 +430,19 @@ def plot_peak_hold(axis: mpl.axes.Axes,
         axis.set_xlabel(xlabel)
     if ylabel is not None:
         axis.set_ylabel(ylabel)
-    axis.xaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
-    axis.yaxis.set_major_formatter(plt.FormatStrFormatter('%g'))
-    axis.grid(b=True, which='major', color='0.25', linestyle='-')
-    axis.grid(b=True, which='minor', color='0.75', linestyle='-')
+    axis.xaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
+    axis.yaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
+    axis.grid(b=True, which="major", color="0.25", linestyle="-")
+    axis.grid(b=True, which="minor", color="0.75", linestyle="-")
     axis.set_axisbelow(True)
 
 
-def single_frequency_over_time(stft_data: npt.NDArray,
-                               freq_array: npt.NDArray,
-                               time_array: npt.NDArray,
-                               frequency: float) -> npt.NDArray:
+def single_frequency_over_time(
+    stft_data: npt.NDArray,
+    freq_array: npt.NDArray,
+    time_array: npt.NDArray,
+    frequency: float,
+) -> npt.NDArray:
     """Determine the amplitude vs. time for a particular frequency
 
     Given an STFT data array and its supporting frequency and time arrays, as
@@ -458,22 +468,19 @@ def single_frequency_over_time(stft_data: npt.NDArray,
     """
     # Check that the arrays are the correct size
     if freq_array.size != stft_data.shape[1]:
-        raise IndexError('The size of the freq_array does not match '
-                         'the STFT data.')
+        raise IndexError("The size of the freq_array does not match " "the STFT data.")
     if time_array.size != stft_data.shape[0]:
-        raise IndexError('The size of the time_array does not match '
-                         'the STFT data.')
+        raise IndexError("The size of the time_array does not match " "the STFT data.")
     # Create the array to return the time and amplitude
-    data_type = np.dtype([('time', 'f8'), ('amplitude', 'f8')])
+    data_type = np.dtype([("time", "f8"), ("amplitude", "f8")])
     stft_at_frequency = np.zeros(time_array.size, dtype=data_type)
-    stft_at_frequency['time'] = time_array
+    stft_at_frequency["time"] = time_array
     freq_bin = int(frequency / (freq_array[1] - freq_array[0]))
-    stft_at_frequency['amplitude'] = stft_data[:, freq_bin]
+    stft_at_frequency["amplitude"] = stft_data[:, freq_bin]
     return stft_at_frequency
 
 
-def freq_bin(desired_freq: float, first_freq: float,
-             hz_per_freq_bin: float) -> int:
+def freq_bin(desired_freq: float, first_freq: float, hz_per_freq_bin: float) -> int:
     """Determine the frequency bin for the desired frequency.
 
     Given the width of each frequency bin (Hz) and the frequency of the first
@@ -481,7 +488,7 @@ def freq_bin(desired_freq: float, first_freq: float,
     """
     bin = round((desired_freq - first_freq) / hz_per_freq_bin, 1)
     x = int(round(bin, 0))
-    print(f'f_given = {desired_freq} / f0 = {first_freq}')
-    print(f'bin_width = {hz_per_freq_bin} / bin = {bin} / round(bin) = {x}')
+    print(f"f_given = {desired_freq} / f0 = {first_freq}")
+    print(f"bin_width = {hz_per_freq_bin} / bin = {bin} / round(bin) = {x}")
 
     return int(round(bin))
