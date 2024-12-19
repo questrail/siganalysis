@@ -8,10 +8,11 @@
 loc:
   scc --remap-unknown "-*- Justfile -*-":"justfile"
 
-# Lint code using ruff
+# Lint and format code using ruff
 [group('test')]
-lint: 
+fix: 
   ruff check
+  ruff format
 
 # Test code using nose2
 [group('test')]
