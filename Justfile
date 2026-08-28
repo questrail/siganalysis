@@ -64,6 +64,7 @@ lock:
 # Check, test, build, and publish to PyPI
 [group('deploy')]
 deploy: lint check test
-  rm -rf dist
   uv build
-  uv publish
+  # dist/ keeps every build, and uv publish uploads dist/* by default, so
+  # check the index and skip the versions already published.
+  uv publish --check-url https://pypi.org/simple/
