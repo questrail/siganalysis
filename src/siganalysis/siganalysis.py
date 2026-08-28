@@ -12,8 +12,9 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 # Standard module imports
 import math
 
-import matplotlib as mpl  # type: ignore
-import matplotlib.pyplot as plt  # type: ignore
+import matplotlib.axes
+import matplotlib.image
+import matplotlib.pyplot as plt
 
 # Numerical analysis related imports
 import numpy as np
@@ -280,8 +281,8 @@ def calculate_peak_hold(
         )
     data_type = np.dtype([("frequency", "f8"), ("amplitude", "f8")])
     peak_hold = np.zeros(frequency_array.size, dtype=data_type)
-    peak_hold["frequency"] = frequency_array
-    peak_hold["amplitude"] = np.amax(stft_data, axis=0)
+    peak_hold["frequency"] = frequency_array  # ty: ignore[invalid-assignment]
+    peak_hold["amplitude"] = np.amax(stft_data, axis=0)  # ty: ignore[invalid-assignment]
     return peak_hold
 
 
@@ -289,7 +290,7 @@ def plot_spectrogram(
     stft_data: npt.NDArray,
     time_vector: npt.NDArray,
     freq_vector: npt.NDArray,
-    plot_axis: mpl.axes.Axes,
+    plot_axis: matplotlib.axes.Axes,
     freq_plot_range: tuple[int, int] | None = None,
     time_plot_range: tuple[int, int] | None = None,
     plot_title: str | None = None,
@@ -297,7 +298,7 @@ def plot_spectrogram(
     plot_ylabel: str | None = None,
     colorbar_label: str | None = None,
     colorbar_fontsize: int = 8,
-) -> mpl.image.AxesImage:
+) -> matplotlib.image.AxesImage:
     """Create a spectrogram plot
 
     Take a numpy ndarray containing amplitude vs. frequency vs. time info and
@@ -365,7 +366,7 @@ def plot_spectrogram(
         cb.ax.tick_params(labelsize=colorbar_fontsize)
         cb.set_label(colorbar_label)
     spectrogram.set_extent(
-        [start_time_plot, stop_time_plot, start_freq_plot, stop_freq_plot]
+        (start_time_plot, stop_time_plot, start_freq_plot, stop_freq_plot)
     )
     if plot_title is not None:
         plot_axis.set_title(plot_title)
@@ -377,7 +378,7 @@ def plot_spectrogram(
 
 
 def plot_peak_hold(
-    axis: mpl.axes.Axes,
+    axis: matplotlib.axes.Axes,
     stft_data: npt.NDArray,
     frequency_array: npt.NDArray,
     title: str | None = None,
@@ -474,9 +475,9 @@ def single_frequency_over_time(
     # Create the array to return the time and amplitude
     data_type = np.dtype([("time", "f8"), ("amplitude", "f8")])
     stft_at_frequency = np.zeros(time_array.size, dtype=data_type)
-    stft_at_frequency["time"] = time_array
+    stft_at_frequency["time"] = time_array  # ty: ignore[invalid-assignment]
     bin_number = freq_bin(frequency, freq_array[0], freq_array[1] - freq_array[0])
-    stft_at_frequency["amplitude"] = stft_data[:, bin_number]
+    stft_at_frequency["amplitude"] = stft_data[:, bin_number]  # ty: ignore[invalid-assignment]
     return stft_at_frequency
 
 

@@ -8,15 +8,25 @@
 loc:
   scc --remap-unknown "-*- Justfile -*-":"justfile"
 
+# Search pydoc for given term
+[group('general')]
+doc term:
+  uv run python -m pydoc {{term}}
+
+# type check using ty
+[group('test')]
+check:
+  uv run ty check
+
 # Lint and format code using ruff
 [group('test')]
-fix: 
-  ruff format
-  ruff check --fix
+lint:
+  uv run ruff format
+  uv run ruff check
 
 # Test code using pytest
 [group('test')]
-test: 
+test:
   uv run pytest
 
 # Add dependency
@@ -48,6 +58,6 @@ lock:
 
 # Format, test, build, and publish to PyPI
 [group('deploy')]
-deploy: fix test
+deploy: lint test
   uv build
   uv publish
