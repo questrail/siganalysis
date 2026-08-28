@@ -83,8 +83,11 @@ def stft(
             size and the hop size are truncated to a whole number of
             samples at the given sampling frequency.
         use_hamming_window: A Boolean indicating if the Hamming window
-            should be used when performing the FFT. Using a Hamming window
-            helps.
+            should be used when performing the FFT. A Hamming window reduces
+            the spectral leakage from a tone that does not fall on the center
+            of a frequency bin. The returned amplitudes are corrected for the
+            gain of the window, so they are comparable to the amplitudes
+            returned for an unwindowed frame either way.
 
     Returns:
         A tuple containing:
@@ -129,13 +132,14 @@ def stft(
             f"{len(input_data)} samples."
         )
     if use_hamming_window:
+        # Applying a window scales every amplitude by the mean of the window,
+        # its coherent gain, so divide the window through by that mean to get
+        # back the amplitudes an unwindowed frame would have given.
+        window = signal.windows.hamming(num_frame_samples)
+        window = window / window.mean()
         x = np.array(
             [
-                fft(
-                    2
-                    * signal.windows.hamming(num_frame_samples)
-                    * input_data[i : i + num_frame_samples]
-                )
+                fft(window * input_data[i : i + num_frame_samples])
                 for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
             ]
         )

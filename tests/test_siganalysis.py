@@ -182,6 +182,70 @@ class TestShortTimeFourierTransform:
         )
         assert freq_bin_size == 1 / frame_size_sec
 
+    def test_stft_amplitude_without_a_window(self, two_tone_signal):
+        # Both tones fall on the center of a bin for a 1 sec frame, so an
+        # unwindowed frame reports each amplitude exactly.
+        data_stft, _, freq_array_stft, freq_bin_size = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            use_hamming_window=False,
+        )
+        for frequency_hz, amplitude in (
+            (SIGNAL_1_FREQUENCY_HZ, SIGNAL_1_AMPLITUDE),
+            (SIGNAL_2_FREQUENCY_HZ, SIGNAL_2_AMPLITUDE),
+        ):
+            bin_number = siganalysis.freq_bin(
+                frequency_hz, freq_array_stft[0], freq_bin_size
+            )
+            assert data_stft[0, bin_number] == pytest.approx(amplitude)
+
+    def test_stft_amplitude_is_corrected_for_the_window_gain(self, two_tone_signal):
+        # A window scales every amplitude by its coherent gain, so without a
+        # correction a windowed frame reports the wrong amplitude. The mean of
+        # a Hamming window is about 0.54, so an uncorrected frame would report
+        # about half of each amplitude.
+        data_stft, _, freq_array_stft, freq_bin_size = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            use_hamming_window=True,
+        )
+        for frequency_hz, amplitude in (
+            (SIGNAL_1_FREQUENCY_HZ, SIGNAL_1_AMPLITUDE),
+            (SIGNAL_2_FREQUENCY_HZ, SIGNAL_2_AMPLITUDE),
+        ):
+            bin_number = siganalysis.freq_bin(
+                frequency_hz, freq_array_stft[0], freq_bin_size
+            )
+            assert data_stft[0, bin_number] == pytest.approx(amplitude, rel=1e-3)
+
+    def test_stft_amplitude_matches_with_and_without_a_window(self, two_tone_signal):
+        # A tone on the center of a bin has no leakage to suppress, so the
+        # window may not change the amplitude reported for it.
+        windowed, _, freq_array_stft, freq_bin_size = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            use_hamming_window=True,
+        )
+        unwindowed, *_ = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            use_hamming_window=False,
+        )
+        bin_number = siganalysis.freq_bin(
+            SIGNAL_1_FREQUENCY_HZ, freq_array_stft[0], freq_bin_size
+        )
+        assert windowed[0, bin_number] == pytest.approx(
+            unwindowed[0, bin_number], rel=1e-3
+        )
+
 
 class TestPeakHold:
     def test_peak_hold_size(self, single_tone_stft):

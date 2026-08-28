@@ -3,6 +3,22 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Changed
+- **`stft()` returns different amplitudes when a Hamming window is used.**
+  See the fix below. Amplitudes are now about 7% (0.594 dB) lower, and
+  the amplitude reported for a tone is now the same with the window on as
+  with it off.
+
+### Fixed
+- `stft()` scaled a Hamming windowed frame by 2 rather than by the gain
+  of the window. Applying a window scales every amplitude by the mean of
+  its samples, its coherent gain, which is 0.5354 for a Hamming window,
+  so the correction needed is 1/0.5354 = 1.8678. Scaling by 2 instead
+  left every windowed amplitude 7.08% (0.594 dB) high, which is a
+  meaningful error when comparing a peak hold against a limit line. A
+  1.0 amplitude tone on the center of a bin now reads 1.0 rather than
+  1.0708.
+
 ## v0.7.0 - 2026-08-28
 
 ### Added
