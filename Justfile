@@ -11,8 +11,8 @@ loc:
 # Lint and format code using ruff
 [group('test')]
 fix: 
-  ruff check
   ruff format
+  ruff check --fix
 
 # Test code using nose2
 [group('test')]

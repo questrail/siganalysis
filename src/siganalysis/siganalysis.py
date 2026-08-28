@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright (c) 2013-2023 The siganalysis developers. All rights reserved.
 # Project site: https://github.com/questrail/siganalysis
 # Use of this source code is governed by a MIT-style license that
@@ -11,15 +10,15 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 """
 
 # Standard module imports
-from typing import Optional
+
+import matplotlib as mpl  # type: ignore
+import matplotlib.pyplot as plt  # type: ignore
 
 # Numerical analysis related imports
 import numpy as np
 import numpy.typing as npt
 from scipy import signal
 from scipy.fft import fft
-import matplotlib as mpl  # type: ignore
-import matplotlib.pyplot as plt  # type: ignore
 
 __version__ = "0.5.0"
 
@@ -276,7 +275,7 @@ def calculate_peak_hold(
     """
     if frequency_array.size != stft_data.shape[1]:
         raise IndexError(
-            "The size of the frequency_array does not match " "the STFT data."
+            "The size of the frequency_array does not match the STFT data."
         )
     data_type = np.dtype([("frequency", "f8"), ("amplitude", "f8")])
     peak_hold = np.zeros(frequency_array.size, dtype=data_type)
@@ -290,12 +289,12 @@ def plot_spectrogram(
     time_vector: npt.NDArray,
     freq_vector: npt.NDArray,
     plot_axis: mpl.axes.Axes,
-    freq_plot_range: Optional[tuple[int, int]] = None,
-    time_plot_range: Optional[tuple[int, int]] = None,
-    plot_title: Optional[str] = None,
-    plot_xlabel: Optional[str] = None,
-    plot_ylabel: Optional[str] = None,
-    colorbar_label: Optional[str] = None,
+    freq_plot_range: tuple[int, int] | None = None,
+    time_plot_range: tuple[int, int] | None = None,
+    plot_title: str | None = None,
+    plot_xlabel: str | None = None,
+    plot_ylabel: str | None = None,
+    colorbar_label: str | None = None,
     colorbar_fontsize: int = 8,
 ) -> mpl.image.AxesImage:
     """Create a spectrogram plot
@@ -380,13 +379,13 @@ def plot_peak_hold(
     axis: mpl.axes.Axes,
     stft_data: npt.NDArray,
     frequency_array: npt.NDArray,
-    title: Optional[str] = None,
-    xlabel: Optional[str] = None,
-    ylabel: Optional[str] = None,
-    plot_freq_limits: Optional[tuple[int, int]] = None,
-    plot_amp_limits: Optional[tuple[float, float]] = None,
-    limit_array: Optional[npt.NDArray] = None,
-    trace_label: Optional[str] = None,
+    title: str | None = None,
+    xlabel: str | None = None,
+    ylabel: str | None = None,
+    plot_freq_limits: tuple[int, int] | None = None,
+    plot_amp_limits: tuple[float, float] | None = None,
+    limit_array: npt.NDArray | None = None,
+    trace_label: str | None = None,
 ):
     """Plot the peak hold for a 2D STFT array
 
@@ -468,9 +467,9 @@ def single_frequency_over_time(
     """
     # Check that the arrays are the correct size
     if freq_array.size != stft_data.shape[1]:
-        raise IndexError("The size of the freq_array does not match " "the STFT data.")
+        raise IndexError("The size of the freq_array does not match the STFT data.")
     if time_array.size != stft_data.shape[0]:
-        raise IndexError("The size of the time_array does not match " "the STFT data.")
+        raise IndexError("The size of the time_array does not match the STFT data.")
     # Create the array to return the time and amplitude
     data_type = np.dtype([("time", "f8"), ("amplitude", "f8")])
     stft_at_frequency = np.zeros(time_array.size, dtype=data_type)
