@@ -3,6 +3,40 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.7.0 - 2026-08-28
+
+### Added
+- Tests for `stft()`'s time vector and for `plot_spectrogram()`, neither
+  of which had any.
+
+### Changed
+- **`stft()` returns different timestamps** when the hop size is not a
+  whole number of samples. See the fix below.
+- **`plot_spectrogram()` draws a different range.** Both the frequency
+  and the time plot range now include the bin at the top of the range,
+  as the docstring has always described, so a plot gains a bin at each
+  end. The axis limits now run half a bin past the outermost bins drawn,
+  which is where the edges of those bins actually fall.
+- Upgraded numpy to 2.5.2, scipy to 1.18.1, and matplotlib to 3.11.1.
+- The package author is now recorded with a GitHub noreply address.
+- Updated the copyright notices through 2026.
+
+### Fixed
+- `stft()` built its time vector from the requested `hop_size_sec`, but
+  frames advance by that hop truncated to a whole number of samples.
+  Whenever the two differed, every timestamp was wrong, and silently so.
+  A 0.0015 sec hop at 1 kHz truncates to a single sample, which put the
+  last frame of a 10 second signal at 14.2485 sec rather than 9.499 sec.
+- `plot_spectrogram()` sliced the requested plot ranges exclusively while
+  documenting them as inclusive, dropping the top bin of each range, and
+  then labelled the axes with the full requested range regardless. The
+  bins that were drawn were stretched across a box describing a wider
+  span, displacing every feature in the plot.
+- `plot_spectrogram()` produced an out of range or a negative bin for a
+  plot range reaching past either end of the data. Such a range is now
+  clamped to the data.
+- `plot_peak_hold()` documented a return value it has never returned.
+
 ## v0.6.0 - 2026-08-28
 
 ### Added
