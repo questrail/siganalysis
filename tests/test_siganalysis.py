@@ -1,7 +1,12 @@
+import matplotlib
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 
 import siganalysis
+
+# Draw into a buffer rather than opening a window when testing the plots.
+matplotlib.use("Agg")
 
 # Signals are sampled at 96 kHz (common for the LX-10) for 10 seconds.
 SAMPLING_RATE_HZ = 96000
@@ -298,3 +303,93 @@ class TestSingleFrequencyOverTime:
             siganalysis.single_frequency_over_time(
                 stft_data, np.arange(10) * 2.0, np.arange(2, dtype=float), 4
             )
+
+
+class TestPlotSpectrogram:
+    @pytest.fixture
+    def spectrogram_data(self):
+        """Ten time bins by ten frequency bins.
+
+        Each value is 10 * time bin + frequency bin, so every cell identifies
+        which bin it came from.
+        """
+        return np.arange(100, dtype=float).reshape(10, 10)
+
+    @pytest.fixture
+    def time_vector(self):
+        return np.arange(10) * 1.0
+
+    @pytest.fixture
+    def freq_vector(self):
+        return np.arange(10) * 2.0
+
+    @pytest.fixture
+    def axis(self):
+        figure, axis = plt.subplots()
+        yield axis
+        plt.close(figure)
+
+    def test_plots_every_bin_by_default(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        spectrogram = siganalysis.plot_spectrogram(
+            spectrogram_data, time_vector, freq_vector, axis
+        )
+        assert spectrogram.get_array().shape == (freq_vector.size, time_vector.size)
+
+    def test_plot_ranges_include_both_ends(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        # Time bins 2 through 5 and frequency bins 2 through 5, which is four
+        # of each because both ends are inclusive.
+        spectrogram = siganalysis.plot_spectrogram(
+            spectrogram_data,
+            time_vector,
+            freq_vector,
+            axis,
+            time_plot_range=(2, 5),
+            freq_plot_range=(4, 10),
+        )
+        plotted = spectrogram.get_array()
+        assert plotted.shape == (4, 4)
+        # The array is transposed for plotting, so it is (freq, time).
+        assert plotted[0][0] == 10 * 2 + 2
+        assert plotted[-1][-1] == 10 * 5 + 5
+
+    def test_plot_ranges_are_clamped_to_the_data(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        spectrogram = siganalysis.plot_spectrogram(
+            spectrogram_data,
+            time_vector,
+            freq_vector,
+            axis,
+            time_plot_range=(-5, 99),
+            freq_plot_range=(-5, 99),
+        )
+        assert spectrogram.get_array().shape == (freq_vector.size, time_vector.size)
+
+    def test_extent_puts_each_bin_center_on_its_own_value(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        spectrogram = siganalysis.plot_spectrogram(
+            spectrogram_data,
+            time_vector,
+            freq_vector,
+            axis,
+            time_plot_range=(2, 5),
+            freq_plot_range=(4, 10),
+        )
+        left, right, bottom, top = spectrogram.get_extent()
+        num_freq_bins, num_time_bins = spectrogram.get_array().shape
+
+        time_centers = [
+            left + (bin + 0.5) * (right - left) / num_time_bins
+            for bin in range(num_time_bins)
+        ]
+        freq_centers = [
+            bottom + (bin + 0.5) * (top - bottom) / num_freq_bins
+            for bin in range(num_freq_bins)
+        ]
+        assert time_centers == pytest.approx(list(time_vector[2:6]))
+        assert freq_centers == pytest.approx(list(freq_vector[2:6]))

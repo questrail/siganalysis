@@ -320,6 +320,15 @@ def calculate_peak_hold(
     return peak_hold
 
 
+def _bin_holding(value: float, vector: npt.NDArray, step: float) -> int:
+    """Determine the bin of vector holding value.
+
+    The bin is clamped to the vector, so a value outside the range covered by
+    vector gives the first or the last bin rather than an out of range index.
+    """
+    return min(max(int((value - vector[0]) / step), 0), vector.size - 1)
+
+
 def plot_spectrogram(
     stft_data: npt.NDArray,
     time_vector: npt.NDArray,
@@ -372,8 +381,6 @@ def plot_spectrogram(
     else:
         start_freq_plot, stop_freq_plot = freq_plot_range
 
-    # FIXME: Is there an error in the time plot range or the calculation of the
-    # start and stop time bins?
     if time_plot_range is None:
         start_time_plot = time_vector[0]
         stop_time_plot = time_vector[-1]
@@ -383,14 +390,18 @@ def plot_spectrogram(
     # equal.
     hz_per_freq_bin = freq_vector[1] - freq_vector[0]
     sec_per_time_bin = time_vector[1] - time_vector[0]
-    # Determine the frequency bins for the start and stop freqs
-    start_freq_bin = int((start_freq_plot - freq_vector[0]) / hz_per_freq_bin)
-    stop_freq_bin = int((stop_freq_plot - freq_vector[0]) / hz_per_freq_bin)
-    start_time_bin = int((start_time_plot - time_vector[0]) / sec_per_time_bin)
-    stop_time_bin = int((stop_time_plot - time_vector[0]) / sec_per_time_bin)
+    # Determine the bins holding the requested start and stop values. Both
+    # ends are inclusive, so the stop bins are included in the slices.
+    start_freq_bin = _bin_holding(start_freq_plot, freq_vector, hz_per_freq_bin)
+    stop_freq_bin = _bin_holding(stop_freq_plot, freq_vector, hz_per_freq_bin)
+    start_time_bin = _bin_holding(start_time_plot, time_vector, sec_per_time_bin)
+    stop_time_bin = _bin_holding(stop_time_plot, time_vector, sec_per_time_bin)
     # Create the spectrogram
     spectrogram = plot_axis.imshow(
-        stft_data[start_time_bin:stop_time_bin, start_freq_bin:stop_freq_bin].T,
+        stft_data[
+            start_time_bin : stop_time_bin + 1,
+            start_freq_bin : stop_freq_bin + 1,
+        ].T,
         origin="lower",
         aspect="auto",
         interpolation="nearest",
@@ -399,8 +410,17 @@ def plot_spectrogram(
         cb = plt.colorbar(spectrogram, ax=plot_axis)
         cb.ax.tick_params(labelsize=colorbar_fontsize)
         cb.set_label(colorbar_label)
+    # imshow puts the extent at the outer edges of the drawn bins, so extend
+    # by half a bin on each side to place each bin center at its own time and
+    # frequency. Use the bins that were actually drawn rather than the
+    # requested values, which need not line up with a bin.
     spectrogram.set_extent(
-        (start_time_plot, stop_time_plot, start_freq_plot, stop_freq_plot)
+        (
+            time_vector[start_time_bin] - sec_per_time_bin / 2,
+            time_vector[stop_time_bin] + sec_per_time_bin / 2,
+            freq_vector[start_freq_bin] - hz_per_freq_bin / 2,
+            freq_vector[stop_freq_bin] + hz_per_freq_bin / 2,
+        )
     )
     if plot_title is not None:
         plot_axis.set_title(plot_title)
