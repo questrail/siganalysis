@@ -164,6 +164,17 @@ def hz2khz(frequency_in_hz: float) -> float:
     return frequency_in_hz / 1000
 
 
+# The windows that smooth() accepts, mapped to the function creating each one.
+# A flat window is all ones, which produces a moving average.
+WINDOW_FUNCTIONS = {
+    "flat": np.ones,
+    "hanning": np.hanning,
+    "hamming": np.hamming,
+    "bartlett": np.bartlett,
+    "blackman": np.blackman,
+}
+
+
 def smooth(
     x: npt.NDArray, window_len: int = 11, window: str = "hanning"
 ) -> npt.NDArray:
@@ -215,18 +226,14 @@ def smooth(
     else:
         window_len += 1
 
-    if window not in ["flat", "hanning", "hamming", "bartlett", "blackman"]:
+    if window not in WINDOW_FUNCTIONS:
         raise ValueError(
-            "Window must be one of: 'flat', 'hanning', "
-            "'hamming', 'bartlett', 'blackman'"
+            f"Window must be one of: {', '.join(repr(w) for w in WINDOW_FUNCTIONS)}"
         )
 
     s = np.r_[x[window_len - 1 : 0 : -1], x, x[-1:-window_len:-1]]
 
-    if window == "flat":
-        w = np.ones(window_len, "d")
-    else:
-        w = eval("np." + window + "(window_len)")
+    w = WINDOW_FUNCTIONS[window](window_len)
     y = np.convolve(w / w.sum(), s, mode="valid")
     samples_to_strip = (window_len - 1) // 2
     return y[samples_to_strip : len(y) - samples_to_strip]
