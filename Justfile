@@ -13,21 +13,27 @@ loc:
 doc term:
   uv run python -m pydoc {{term}}
 
-# type check using ty
+# Type check using ty
 [group('test')]
 check:
   uv run ty check
 
-# Lint and format code using ruff
+# Lint and format code without making changes
 [group('test')]
 lint:
-  uv run ruff format
+  uv run ruff format --check
   uv run ruff check
+
+# Lint and format code and apply changes
+[group('test')]
+fix:
+  uv run ruff format
+  uv run ruff check --fix
 
 # Test code using pytest
 [group('test')]
-test:
-  uv run pytest
+test *args:
+  uv run pytest {{args}}
 
 # Add dependency
 [group('dependencies')]
@@ -55,8 +61,9 @@ out:
 lock:
   uv lock
 
-# Format, test, build, and publish to PyPI
+# Check, test, build, and publish to PyPI
 [group('deploy')]
-deploy: lint test
+deploy: lint check test
+  rm -rf dist
   uv build
   uv publish
