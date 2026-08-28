@@ -1,13 +1,9 @@
 # siganalysis
-[pypi ver image]: http://img.shields.io/pypi/v/applyaf.svg
-[pypi ver link]: https://pypi.python.org/pypi/applyaf
 
 [![PyPi Version][pypi ver image]][pypi ver link]
-[![Build Status][travis image]][travis link]
-[![Coverage Status][coveralls image]][coveralls link]
 [![License Badge][license image]][LICENSE.txt]
 
-Python (3.6+) routines for analyzing signals. Some of the functions include:
+Python (3.12+) routines for analyzing signals. Some of the functions include:
 
 - Calculating [Short-Time Fourier Transform][stft]
 - Smoothing a signal
@@ -56,17 +52,24 @@ Contributions are welcome! To contribute please:
 
 ## Development Setup
 
-### Development Setup Using pyenv
+[siganalysis][] uses [uv][] to manage the virtualenv and dependencies, and
+[just][] as the task runner.
 
-Use the following commands to create a Python 3.9.9 virtualenv using [pyenv][]
-and [pyenv-virtualenv][], install the requirements in the virtualenv named
-`siganalysis`, and list the available [Invoke][] tasks.
+Use the following commands to create the virtualenv, install the dependencies
+(including the development group), and list the available [just][] recipes.
 
 ```bash
-$ pyenv virtualenv 3.9.9 siganalysis
-$ pyenv activate siganalysis
-$ pip install -r requirements.txt
-$ inv -l
+$ uv sync
+$ just
+```
+
+The most common recipes are:
+
+```bash
+$ just test    # Run the tests using nose2
+$ just fix     # Lint and format the code using ruff
+$ just add X   # Add X as a dependency
+$ just out     # List the outdated dependencies
 ```
 
 
@@ -76,22 +79,15 @@ $ inv -l
 [LICENSE.txt][] file for more information.
 
 
-[coveralls image]: http://img.shields.io/coveralls/questrail/siganalysis/master.svg
-[coveralls link]: https://coveralls.io/r/questrail/siganalysis
-[invoke]: https://www.pyinvoke.org/
+[just]: https://github.com/casey/just
 [LICENSE.txt]: https://github.com/questrail/siganalysis/blob/develop/LICENSE.txt
 [license image]: http://img.shields.io/pypi/l/siganalysis.svg
 [numpy]: http://www.numpy.org
 [matplotlib]: http://matplotlib.org
 [pull request]: https://help.github.com/articles/using-pull-requests
-[pyenv]: https://github.com/pyenv/pyenv
-[pyenv-virtualenv]: https://github.com/pyenv/pyenv-virtualenv
 [pypi ver image]: http://img.shields.io/pypi/v/siganalysis.svg
 [pypi ver link]: https://pypi.python.org/pypi/siganalysis/
 [scipy]: http://www.scipy.org
 [siganalysis]: https://github.com/questrail/siganalysis
 [stft]: http://en.wikipedia.org/wiki/Short-time_Fourier_transform
-[travis image]: http://img.shields.io/travis/questrail/siganalysis/master.svg
-[travis link]: https://travis-ci.org/questrail/siganalysis
-[virtualenv]: https://virtualenv.pypa.io/en/latest/
-[virtualenvwrapper]: http://virtualenvwrapper.readthedocs.org/en/latest/
+[uv]: https://docs.astral.sh/uv/
