@@ -66,7 +66,7 @@ $ just
 The most common recipes are:
 
 ```bash
-$ just test    # Run the tests using nose2
+$ just test    # Run the tests using pytest
 $ just fix     # Lint and format the code using ruff
 $ just add X   # Add X as a dependency
 $ just out     # List the outdated dependencies

@@ -14,10 +14,10 @@ fix:
   ruff format
   ruff check --fix
 
-# Test code using nose2
+# Test code using pytest
 [group('test')]
 test: 
-  uv run nose2
+  uv run pytest
 
 # Add dependency
 [group('dependencies')]

@@ -34,4 +34,6 @@ venv = ".venv"
 include = ["src"]
 
 [dependency-groups]
-dev = ["nose2>=0.15.1"]
+dev = [
+    "pytest>=9.1.1",
+]
