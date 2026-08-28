@@ -10,6 +10,7 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 """
 
 # Standard module imports
+import math
 
 import matplotlib as mpl  # type: ignore
 import matplotlib.pyplot as plt  # type: ignore
@@ -431,8 +432,8 @@ def plot_peak_hold(
         axis.set_ylabel(ylabel)
     axis.xaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
     axis.yaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
-    axis.grid(b=True, which="major", color="0.25", linestyle="-")
-    axis.grid(b=True, which="minor", color="0.75", linestyle="-")
+    axis.grid(visible=True, which="major", color="0.25", linestyle="-")
+    axis.grid(visible=True, which="minor", color="0.75", linestyle="-")
     axis.set_axisbelow(True)
 
 
@@ -484,10 +485,18 @@ def freq_bin(desired_freq: float, first_freq: float, hz_per_freq_bin: float) -> 
 
     Given the width of each frequency bin (Hz) and the frequency of the first
     bin, determine the bin number for the given desired frequency (Hz).
-    """
-    bin = round((desired_freq - first_freq) / hz_per_freq_bin, 1)
-    x = int(round(bin, 0))
-    print(f"f_given = {desired_freq} / f0 = {first_freq}")
-    print(f"bin_width = {hz_per_freq_bin} / bin = {bin} / round(bin) = {x}")
 
-    return int(round(bin))
+    Frequencies falling exactly halfway between two bins are rounded up to the
+    higher bin. Note that this differs from the builtin round(), which rounds
+    a halfway value to the nearest even bin.
+
+    Args:
+        desired_freq: The frequency in Hz for which the bin is desired.
+        first_freq: The frequency in Hz of the first bin.
+        hz_per_freq_bin: The width of each frequency bin in Hz.
+
+    Returns:
+        The bin number containing the desired frequency.
+
+    """
+    return math.floor((desired_freq - first_freq) / hz_per_freq_bin + 0.5)
