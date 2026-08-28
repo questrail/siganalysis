@@ -46,7 +46,7 @@ def single_tone_stft():
         SAMPLING_RATE_HZ,
         FRAME_SIZE_SEC,
         HOP_SIZE_SEC,
-        use_hamming_window=False,
+        window=None,
     )
 
 
@@ -182,7 +182,7 @@ class TestShortTimeFourierTransform:
         )
         assert freq_bin_size == 1 / frame_size_sec
 
-    def test_stft_amplitude_without_a_window(self, two_tone_signal):
+    def test_stft_amplitude_with_no_window(self, two_tone_signal):
         # Both tones fall on the center of a bin for a 1 sec frame, so an
         # unwindowed frame reports each amplitude exactly.
         data_stft, _, freq_array_stft, freq_bin_size = siganalysis.stft(
@@ -190,7 +190,7 @@ class TestShortTimeFourierTransform:
             SAMPLING_RATE_HZ,
             FRAME_SIZE_SEC,
             HOP_SIZE_SEC,
-            use_hamming_window=False,
+            window=None,
         )
         for frequency_hz, amplitude in (
             (SIGNAL_1_FREQUENCY_HZ, SIGNAL_1_AMPLITUDE),
@@ -211,7 +211,7 @@ class TestShortTimeFourierTransform:
             SAMPLING_RATE_HZ,
             FRAME_SIZE_SEC,
             HOP_SIZE_SEC,
-            use_hamming_window=True,
+            window="hamming",
         )
         for frequency_hz, amplitude in (
             (SIGNAL_1_FREQUENCY_HZ, SIGNAL_1_AMPLITUDE),
@@ -230,14 +230,14 @@ class TestShortTimeFourierTransform:
             SAMPLING_RATE_HZ,
             FRAME_SIZE_SEC,
             HOP_SIZE_SEC,
-            use_hamming_window=True,
+            window="hamming",
         )
         unwindowed, *_ = siganalysis.stft(
             two_tone_signal,
             SAMPLING_RATE_HZ,
             FRAME_SIZE_SEC,
             HOP_SIZE_SEC,
-            use_hamming_window=False,
+            window=None,
         )
         bin_number = siganalysis.freq_bin(
             SIGNAL_1_FREQUENCY_HZ, freq_array_stft[0], freq_bin_size
@@ -245,6 +245,81 @@ class TestShortTimeFourierTransform:
         assert windowed[0, bin_number] == pytest.approx(
             unwindowed[0, bin_number], rel=1e-3
         )
+
+    @pytest.mark.parametrize("window_name", sorted(siganalysis.STFT_WINDOWS))
+    def test_stft_amplitude_is_corrected_for_every_window(
+        self, two_tone_signal, window_name
+    ):
+        # The gain correction is the mean of the window, so it has to give the
+        # right amplitude for every window offered, not just for the Hamming
+        # window it was written against.
+        data_stft, _, freq_array_stft, freq_bin_size = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            window=window_name,
+        )
+        for frequency_hz, amplitude in (
+            (SIGNAL_1_FREQUENCY_HZ, SIGNAL_1_AMPLITUDE),
+            (SIGNAL_2_FREQUENCY_HZ, SIGNAL_2_AMPLITUDE),
+        ):
+            bin_number = siganalysis.freq_bin(
+                frequency_hz, freq_array_stft[0], freq_bin_size
+            )
+            assert data_stft[0, bin_number] == pytest.approx(amplitude, rel=1e-3)
+
+    def test_stft_defaults_to_the_hamming_window(self, two_tone_signal):
+        without_argument, *_ = siganalysis.stft(
+            two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
+        )
+        hamming, *_ = siganalysis.stft(
+            two_tone_signal,
+            SAMPLING_RATE_HZ,
+            FRAME_SIZE_SEC,
+            HOP_SIZE_SEC,
+            window="hamming",
+        )
+        assert np.array_equal(without_argument, hamming)
+
+    def test_stft_hanning_is_an_alias_for_hann(self, two_tone_signal):
+        hann, *_ = siganalysis.stft(
+            two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC, "hann"
+        )
+        hanning, *_ = siganalysis.stft(
+            two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC, "hanning"
+        )
+        assert np.array_equal(hann, hanning)
+
+    def test_stft_windows_differ_from_one_another(self, two_tone_signal):
+        # Guard against a registry entry silently pointing at the wrong
+        # window, which the amplitude tests above would not catch.
+        results = {
+            name: siganalysis.stft(
+                two_tone_signal,
+                SAMPLING_RATE_HZ,
+                FRAME_SIZE_SEC,
+                HOP_SIZE_SEC,
+                window=name,
+            )[0]
+            for name in ("hamming", "hann", "blackman", "blackmanharris", "flattop")
+        }
+        for name, data_stft in results.items():
+            for other_name, other_stft in results.items():
+                if name < other_name:
+                    assert not np.array_equal(data_stft, other_stft), (
+                        f"{name} and {other_name} gave identical results"
+                    )
+
+    def test_stft_unknown_window(self, two_tone_signal):
+        with pytest.raises(ValueError, match="Window must be None or one of"):
+            siganalysis.stft(
+                two_tone_signal,
+                SAMPLING_RATE_HZ,
+                FRAME_SIZE_SEC,
+                HOP_SIZE_SEC,
+                window="kaiser",
+            )
 
 
 class TestPeakHold:

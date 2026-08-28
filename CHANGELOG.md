@@ -3,7 +3,25 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Added
+- `stft()` accepts a choice of window through its new `window` argument,
+  rather than only the Hamming window. `STFT_WINDOWS` names the windows
+  offered: `hamming`, `hann` (also spelled `hanning`, as `smooth()`
+  spells it), `blackman`, `blackmanharris`, and `flattop`. Closes #6,
+  which asked for the Hann window that the Agilent 35670A applies.
+
+  `flattop` is worth knowing about: it is the window a spectrum analyzer
+  offers for accurate amplitude. For a tone falling exactly between two
+  bins, the worst case, it reports 0.999 of a 1.0 amplitude against
+  0.821 for `hamming` and 0.650 for no window, at the cost of resolving
+  the neighboring bins.
+
 ### Changed
+- **`stft()` takes `window` in place of `use_hamming_window`.** The
+  argument is the name of a window or None for no window, so
+  `use_hamming_window=False` becomes `window=None` and
+  `use_hamming_window=True` becomes `window="hamming"`, which is also
+  the default. Passing the old argument raises a TypeError.
 - **`stft()` returns different amplitudes when a Hamming window is used.**
   See the fix below. Amplitudes are now about 7% (0.594 dB) lower, and
   the amplitude reported for a tone is now the same with the window on as

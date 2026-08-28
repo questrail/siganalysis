@@ -57,12 +57,34 @@ def time_slice_zip(
     return zipped
 
 
+# The windows that stft() accepts, mapped to the function creating each one.
+# Each function takes the number of samples and returns the window.
+#
+# A window trades frequency resolution, the width of the main lobe, against
+# the suppression of spectral leakage, the height of the side lobes. hamming
+# is what siganalysis has always applied, and hann is what the Agilent 35670A
+# applies. blackman and blackmanharris widen the main lobe further to push the
+# side lobes down, which helps when a small tone sits near a large one.
+# flattop has the widest main lobe and the flattest top, which makes it the
+# most accurate for the amplitude of a tone that falls between two bins, at
+# the cost of resolving those bins.
+STFT_WINDOWS = {
+    "hamming": signal.windows.hamming,
+    "hann": signal.windows.hann,
+    # hann is also known as hanning, which is what smooth() calls it.
+    "hanning": signal.windows.hann,
+    "blackman": signal.windows.blackman,
+    "blackmanharris": signal.windows.blackmanharris,
+    "flattop": signal.windows.flattop,
+}
+
+
 def stft(
     input_data: npt.NDArray,
     sampling_frequency_hz: float,
     frame_size_sec: float,
     hop_size_sec: float,
-    use_hamming_window: bool = True,
+    window: str | None = "hamming",
 ) -> tuple[npt.NDArray, npt.NDArray, npt.NDArray, float]:
     """Calculate the Short Time Fourier Transform.
 
@@ -82,12 +104,13 @@ def stft(
             size so that there is some amount of overlap. Both the frame
             size and the hop size are truncated to a whole number of
             samples at the given sampling frequency.
-        use_hamming_window: A Boolean indicating if the Hamming window
-            should be used when performing the FFT. A Hamming window reduces
-            the spectral leakage from a tone that does not fall on the center
-            of a frequency bin. The returned amplitudes are corrected for the
-            gain of the window, so they are comparable to the amplitudes
-            returned for an unwindowed frame either way.
+        window: The name of the window to apply to each frame before
+            transforming it, one of the keys of STFT_WINDOWS, or None to
+            apply no window at all. A window reduces the spectral leakage
+            from a tone that does not fall on the center of a frequency bin.
+            The returned amplitudes are corrected for the gain of the window,
+            so they are comparable to the amplitudes returned for an
+            unwindowed frame whichever window is chosen.
 
     Returns:
         A tuple containing:
@@ -108,7 +131,8 @@ def stft(
 
     Raises:
         ValueError: The frame size or the hop size is shorter than one
-            sample at the given sampling frequency.
+            sample at the given sampling frequency, or the window is not
+            one that STFT_WINDOWS names.
         IndexError: The input_data is not longer than one frame, so there
             is nothing to transform.
 
@@ -131,25 +155,26 @@ def stft(
             f"samples in a {frame_size_sec} sec frame, but it contains "
             f"{len(input_data)} samples."
         )
-    if use_hamming_window:
+    if window is not None and window not in STFT_WINDOWS:
+        raise ValueError(
+            f"Window must be None or one of: "
+            f"{', '.join(repr(name) for name in STFT_WINDOWS)}"
+        )
+    if window is None:
+        # No window is a rectangular window, which leaves a frame untouched.
+        window_samples = np.ones(num_frame_samples)
+    else:
         # Applying a window scales every amplitude by the mean of the window,
         # its coherent gain, so divide the window through by that mean to get
         # back the amplitudes an unwindowed frame would have given.
-        window = signal.windows.hamming(num_frame_samples)
-        window = window / window.mean()
-        x = np.array(
-            [
-                fft(window * input_data[i : i + num_frame_samples])
-                for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
-            ]
-        )
-    else:
-        x = np.array(
-            [
-                fft(input_data[i : i + num_frame_samples])
-                for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
-            ]
-        )
+        window_samples = STFT_WINDOWS[window](num_frame_samples)
+        window_samples = window_samples / window_samples.mean()
+    x = np.array(
+        [
+            fft(window_samples * input_data[i : i + num_frame_samples])
+            for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
+        ]
+    )
 
     # Normalize the FFT results
     # See "Description and Application of Fourier Transforms and Fourier
