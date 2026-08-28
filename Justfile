@@ -39,12 +39,11 @@ add dep:
 dev dep:
   uv add --dev {{dep}}
 
-# Update dependency
+# Update dependency in the project dependencies or any group
 [group('dependencies')]
 up dep:
-  uv remove {{dep}}
-  uv add {{dep}}
   uv lock -P {{dep}}
+  uv sync
 
 # List the outdated dependencies
 [group('dependencies')]
