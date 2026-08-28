@@ -30,6 +30,12 @@ Issues = "https://github.com/questrail/siganalysis/issues"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.pytest.ini_options]
+# Collect the tests, and the examples in the docstrings so that an example
+# that stops working is a failing test rather than a surprise for a reader.
+addopts = "--doctest-modules"
+testpaths = ["tests", "src"]
+
 [tool.ty.environment]
 # The project uses a src layout, so first-party modules live under src/.
 root = ["./src"]

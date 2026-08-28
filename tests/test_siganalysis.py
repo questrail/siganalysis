@@ -1,3 +1,5 @@
+import itertools
+
 import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
@@ -89,6 +91,53 @@ class TestTimeSlicing:
             (864000, 960000),
         ]
         assert siganalysis.time_slice_zip(960000, 96000) == expected_zip
+
+    def test_minimum_folds_a_short_last_slice_into_the_one_before(self):
+        # 25 samples in slices of 10 leaves a last slice of 5.
+        assert siganalysis.time_slice_zip(25, 10) == [(0, 10), (10, 20), (20, 25)]
+        assert siganalysis.time_slice_zip(25, 10, 8) == [(0, 10), (10, 25)]
+
+    def test_minimum_leaves_a_long_enough_last_slice_alone(self):
+        expected_zip = [(0, 10), (10, 20), (20, 29)]
+        assert siganalysis.time_slice_zip(29, 10, 8) == expected_zip
+
+    def test_minimum_leaves_an_exact_multiple_alone(self):
+        expected_zip = [(0, 10), (10, 20), (20, 30), (30, 40), (40, 50)]
+        assert siganalysis.time_slice_zip(50, 10, 10) == expected_zip
+
+    def test_minimum_covers_every_sample_exactly_once(self):
+        # Folding must not drop or repeat a sample, whatever the remainder.
+        for number_of_samples in range(1, 60):
+            zipped = siganalysis.time_slice_zip(number_of_samples, 10, 7)
+            assert zipped[0][0] == 0
+            assert zipped[-1][1] == number_of_samples
+            for (_, stop), (start, _) in itertools.pairwise(zipped):
+                assert stop == start
+
+    def test_minimum_is_met_whenever_there_is_more_than_one_slice(self):
+        for number_of_samples in range(1, 60):
+            zipped = siganalysis.time_slice_zip(number_of_samples, 10, 7)
+            if len(zipped) > 1:
+                start, stop = zipped[-1]
+                assert stop - start >= 7
+
+    def test_minimum_with_a_single_short_slice(self):
+        # There is no earlier slice to fold into, so the minimum cannot be
+        # met and the samples are returned as they are rather than dropped.
+        assert siganalysis.time_slice_zip(5, 10, 8) == [(0, 5)]
+
+    def test_the_issue_examples(self):
+        # The examples given in issue #20.
+        assert siganalysis.time_slice_zip(960101, 96000)[-1] == (960000, 960101)
+        assert siganalysis.time_slice_zip(960101, 96000, 12000)[-1] == (864000, 960101)
+
+    def test_minimum_longer_than_a_slice(self):
+        with pytest.raises(ValueError, match="longer than"):
+            siganalysis.time_slice_zip(25, 10, 11)
+
+    def test_no_samples_per_slice(self):
+        with pytest.raises(ValueError, match="at least one sample"):
+            siganalysis.time_slice_zip(25, 0)
 
 
 class TestShortTimeFourierTransform:

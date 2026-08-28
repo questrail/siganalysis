@@ -4,6 +4,18 @@ This file contains all notable changes to the [siganalysis][] project.
 ## Unreleased
 
 ### Added
+- `time_slice_zip()` takes an optional `minimum_samples_in_last_slice`.
+  A last slice shorter than that is folded into the slice before it, so
+  that a sample count just past a multiple of the slice size no longer
+  leaves a last slice too short to process. The samples are kept rather
+  than dropped, so the last slice grows instead. Closes #20.
+- `time_slice_zip()` rejects fewer than one sample per time slice, which
+  had put it into an endless loop.
+- The examples in the docstrings now run as doctests under pytest, so an
+  example that stops working fails the test suite. The example in
+  `smooth()` had been broken for some time: `np.linspace(-2, 2, 0.1)`
+  raises a TypeError, since the third argument is a count rather than a
+  step. Closes #10.
 - `stft()` accepts a choice of window through its new `window` argument,
   rather than only the Hamming window. `STFT_WINDOWS` names the windows
   offered: `hamming`, `hann` (also spelled `hanning`, as `smooth()`

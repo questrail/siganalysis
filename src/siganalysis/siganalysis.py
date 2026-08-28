@@ -28,7 +28,9 @@ __version__ = version("siganalysis")
 
 
 def time_slice_zip(
-    number_of_samples: int, samples_per_time_slice: int
+    number_of_samples: int,
+    samples_per_time_slice: int,
+    minimum_samples_in_last_slice: int | None = None,
 ) -> list[tuple[int, int]]:
     """Create a zipped list of tuples for time slicing a numpy array.
 
@@ -42,11 +44,48 @@ def time_slice_zip(
         samples_per_time_slice: Desired number of samples per time slice not
             including the last time slice which will be limited to the length
             of the time series.
+        minimum_samples_in_last_slice: An optional minimum number of samples
+            for the last time slice. A last slice shorter than this is folded
+            into the slice before it, giving a longer last slice rather than a
+            short one. Pass None, the default, to leave the last slice however
+            short it falls. This cannot exceed samples_per_time_slice, since
+            folding in one short slice cannot make up any more than that.
 
     Returns:
         A list of tuples that can be used to time slice the data.
 
+    Raises:
+        ValueError: There is less than one sample per time slice, or the
+            minimum for the last slice exceeds samples_per_time_slice.
+
+    Example:
+        A number of samples just past a multiple of the slice size leaves a
+        very short last slice, which is sometimes too short to process:
+
+        >>> time_slice_zip(25, 10)
+        [(0, 10), (10, 20), (20, 25)]
+
+        Asking for at least 8 samples in the last slice folds those 5 samples
+        into the slice before them:
+
+        >>> time_slice_zip(25, 10, 8)
+        [(0, 10), (10, 25)]
+
     """
+    if samples_per_time_slice < 1:
+        raise ValueError(
+            f"There must be at least one sample per time slice, but "
+            f"{samples_per_time_slice} were asked for."
+        )
+    if (
+        minimum_samples_in_last_slice is not None
+        and minimum_samples_in_last_slice > samples_per_time_slice
+    ):
+        raise ValueError(
+            f"The last time slice cannot be held to a minimum of "
+            f"{minimum_samples_in_last_slice} samples, which is longer than "
+            f"the {samples_per_time_slice} samples in a time slice."
+        )
     current_index = 0
     zipped = []
     while current_index < (number_of_samples - samples_per_time_slice):
@@ -54,6 +93,12 @@ def time_slice_zip(
         zipped.append(this_tuple)
         current_index += samples_per_time_slice
     zipped.append((current_index, number_of_samples))
+    if minimum_samples_in_last_slice is not None and len(zipped) > 1:
+        last_start, last_stop = zipped[-1]
+        if last_stop - last_start < minimum_samples_in_last_slice:
+            # Fold the short slice into the one before it rather than dropping
+            # it, so that the samples in it are still covered.
+            zipped[-2:] = [(zipped[-2][0], last_stop)]
     return zipped
 
 
@@ -254,17 +299,35 @@ def smooth(
     Returns:
         the smoothed signal
 
-    example:
+    Raises:
+        ValueError: The input is not one dimensional, or the window is not
+            one that WINDOW_FUNCTIONS names.
+        IndexError: The input is shorter than the window.
 
-    import numpy as np
-    t = np.linspace(-2,2,0.1)
-    x = np.sin(t)+np.random.randn(len(t))*0.1
-    y = smooth(x)
+    Example:
+        Smoothing an alternating signal with a flat window, which is to say
+        with a moving average, pulls each sample toward the average of the
+        window around it:
 
-    see also:
+        >>> import numpy as np
+        >>> x = np.array([1., 5., 1., 5., 1., 5., 1., 5., 1., 5., 1.])
+        >>> np.round(smooth(x, window_len=5, window='flat'), 2)
+        array([2.6, 3.4, 2.6, 3.4, 2.6, 3.4, 2.6, 3.4, 2.6, 2.6, 2.6])
 
-    numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman,
-    numpy.convolve, scipy.signal.lfilter
+        The smoothed signal is as long as the signal given:
+
+        >>> smooth(x, window_len=5).size == x.size
+        True
+
+        A window shorter than three samples has nothing to average, so the
+        signal comes back untouched:
+
+        >>> smooth(x, window_len=2) is x
+        True
+
+    See also:
+        numpy.hanning, numpy.hamming, numpy.bartlett, numpy.blackman,
+        numpy.convolve, scipy.signal.lfilter
 
     """
     if x.ndim != 1:
