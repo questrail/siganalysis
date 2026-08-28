@@ -5,7 +5,9 @@ name = "siganalysis"
 version = "0.6.0"
 description = "Perform signal analysis"
 readme = "README.md"
-authors = [{ name = "Matthew Rankin", email = "matthew@questrail.com" }]
+authors = [
+  { name = "Matthew Rankin", email = "369937+matthewrankin@users.noreply.github.com" },
+]
 requires-python = ">=3.12"
 dependencies = ["matplotlib>=3.10.0", "numpy>=2.2.0", "scipy>=1.14.1"]
 classifiers = [
