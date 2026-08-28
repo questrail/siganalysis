@@ -3,6 +3,54 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.6.0 - 2026-08-28
+
+### Added
+- `stft()` now checks its arguments and reports the problem, rather than
+  failing later with an unrelated error.
+- Tests for `single_frequency_over_time()`, which had none.
+
+### Changed
+- Rewrote the test suite for pytest, replacing nose2.
+- Type check using [ty][] rather than pyright.
+- Added pytest, ruff, and ty to the dev dependency group, so that the
+  `just` recipes no longer depend on what happens to be installed.
+- `__version__` is now read from the package metadata, making
+  `pyproject.toml` the only place the version is recorded.
+- `smooth()` selects the window function from a mapping instead of
+  building a call as a string and passing it to `eval()`.
+- Declared the package re-exports with `__all__`.
+- Updated the README for the uv and just workflow, and removed the
+  Travis-CI and Coveralls badges for services no longer in use.
+
+### Fixed
+- `plot_peak_hold()` raised a `ValueError` on every call. It passed the
+  `b` argument to `Axes.grid()`, which matplotlib removed in 3.5.
+- `freq_bin()` returned the lower bin for a frequency falling exactly
+  halfway between two bins, because the builtin `round()` rounds a
+  halfway value to the nearest even bin. Halfway values now round up.
+- `freq_bin()` printed debugging information on every call.
+- `single_frequency_over_time()` did not subtract the frequency of the
+  first bin, so it raised an `IndexError` or returned the wrong
+  amplitude unless the frequency array started at 0 Hz. It now also
+  rounds to the nearest bin rather than truncating, matching
+  `freq_bin()`.
+
+## v0.5.1 - 2024-12-19
+
+### Changed
+- Format the code using ruff.
+- Run check and format in `just fix`.
+
+## v0.5.0 - 2024-12-18
+
+### Changed
+- Switched to uv and Just for dependency management and task running.
+- Added type hints and dropped the Python 2 `__future__` imports,
+  limiting the package to Python 3.
+- Build and publish using build and twine.
+- Updated dependencies.
+
 ## v0.4.0 - 17-Oct-16
 
 ### Added
@@ -108,3 +156,4 @@ This file contains all notable changes to the [siganalysis][] project.
 [#16]: https://github.com/questrail/siganalysis/issues/16
 [#17]: https://github.com/questrail/siganalysis/issues/17
 [siganalysis]: https://github.com/questrail/siganalysis
+[ty]: https://github.com/astral-sh/ty

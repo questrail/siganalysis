@@ -2,7 +2,7 @@
 
 [project]
 name = "siganalysis"
-version = "0.5.1"
+version = "0.6.0"
 description = "Perform signal analysis"
 readme = "README.md"
 authors = [{ name = "Matthew Rankin", email = "matthew@questrail.com" }]
