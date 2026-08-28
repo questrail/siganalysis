@@ -206,3 +206,52 @@ class TestCalcFreqBin(unittest.TestCase):
         expected_bins = [0, 1, 2, 195, 195, 196]
         calculated_bins = [siganalysis.freq_bin(x, 10, 2) for x in given_freqs_hz]
         self.assertEqual(calculated_bins, expected_bins)
+
+
+class TestSingleFrequencyOverTime(unittest.TestCase):
+    def setUp(self):
+        # Three time steps by ten frequency bins, where the amplitude in each
+        # bin is the bin number so that the selected bin is easy to identify.
+        self.stft_data = np.tile(np.arange(10, dtype=float), (3, 1))
+        self.time_array = np.arange(3, dtype=float)
+
+    def test_freq_array_starting_at_0_hz(self):
+        freq_array = np.arange(10) * 2.0
+        amplitude_at_freq = siganalysis.single_frequency_over_time(
+            self.stft_data, freq_array, self.time_array, 4
+        )
+        self.assertEqual(list(amplitude_at_freq["amplitude"]), [2, 2, 2])
+
+    def test_freq_array_not_starting_at_0_hz(self):
+        freq_array = np.arange(10) * 2.0 + 100
+        amplitude_at_freq = siganalysis.single_frequency_over_time(
+            self.stft_data, freq_array, self.time_array, 104
+        )
+        self.assertEqual(list(amplitude_at_freq["amplitude"]), [2, 2, 2])
+
+    def test_time_array_is_returned(self):
+        freq_array = np.arange(10) * 2.0
+        amplitude_at_freq = siganalysis.single_frequency_over_time(
+            self.stft_data, freq_array, self.time_array, 4
+        )
+        self.assertEqual(list(amplitude_at_freq["time"]), list(self.time_array))
+
+    def test_freq_array_size_error(self):
+        self.assertRaises(
+            IndexError,
+            siganalysis.single_frequency_over_time,
+            self.stft_data,
+            np.arange(9) * 2.0,
+            self.time_array,
+            4,
+        )
+
+    def test_time_array_size_error(self):
+        self.assertRaises(
+            IndexError,
+            siganalysis.single_frequency_over_time,
+            self.stft_data,
+            np.arange(10) * 2.0,
+            np.arange(2, dtype=float),
+            4,
+        )

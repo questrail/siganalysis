@@ -475,8 +475,8 @@ def single_frequency_over_time(
     data_type = np.dtype([("time", "f8"), ("amplitude", "f8")])
     stft_at_frequency = np.zeros(time_array.size, dtype=data_type)
     stft_at_frequency["time"] = time_array
-    freq_bin = int(frequency / (freq_array[1] - freq_array[0]))
-    stft_at_frequency["amplitude"] = stft_data[:, freq_bin]
+    bin_number = freq_bin(frequency, freq_array[0], freq_array[1] - freq_array[0])
+    stft_at_frequency["amplitude"] = stft_data[:, bin_number]
     return stft_at_frequency
 
 
