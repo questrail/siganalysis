@@ -2,7 +2,7 @@
 # Project site: https://github.com/questrail/siganalysis
 # Use of this source code is governed by a MIT-style license that
 # can be found in the LICENSE.txt file for the project.
-"""Provide Python (3.8+) routines for signal analysis.
+"""Provide Python (3.12+) routines for signal analysis.
 
 Provide various analysis routines required for analyzing signals in Python,
 such as calculating a Short-Time Fourier Transform, plotting an STFT's
@@ -11,6 +11,7 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 
 # Standard module imports
 import math
+from importlib.metadata import version
 
 import matplotlib.axes
 import matplotlib.image
@@ -22,7 +23,7 @@ import numpy.typing as npt
 from scipy import signal
 from scipy.fft import fft
 
-__version__ = "0.5.0"
+__version__ = version("siganalysis")
 
 
 def time_slice_zip(
