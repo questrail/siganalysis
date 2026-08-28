@@ -100,9 +100,31 @@ def stft(
                 also referred to as the frequency domain step size (not
                 to be confused with or equal to the sampling frequency).
 
+    Raises:
+        ValueError: The frame size or the hop size is shorter than one
+            sample at the given sampling frequency.
+        IndexError: The input_data is not longer than one frame, so there
+            is nothing to transform.
+
     """
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
     num_hop_samples = int(hop_size_sec * sampling_frequency_hz)
+    if num_frame_samples < 1:
+        raise ValueError(
+            f"A {frame_size_sec} sec frame is shorter than one sample at "
+            f"{sampling_frequency_hz} Hz."
+        )
+    if num_hop_samples < 1:
+        raise ValueError(
+            f"A {hop_size_sec} sec hop is shorter than one sample at "
+            f"{sampling_frequency_hz} Hz."
+        )
+    if len(input_data) <= num_frame_samples:
+        raise IndexError(
+            f"The input_data needs to be longer than the {num_frame_samples} "
+            f"samples in a {frame_size_sec} sec frame, but it contains "
+            f"{len(input_data)} samples."
+        )
     if use_hamming_window:
         x = np.array(
             [

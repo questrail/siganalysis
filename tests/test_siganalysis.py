@@ -102,6 +102,28 @@ class TestShortTimeFourierTransform:
         )
         assert freq_bin_size == 1 / FRAME_SIZE_SEC
 
+    def test_input_shorter_than_one_frame(self):
+        with pytest.raises(IndexError, match="longer than"):
+            siganalysis.stft(
+                np.zeros(100), SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
+            )
+
+    def test_input_exactly_one_frame(self):
+        # A frame is taken only while the start index is short of the end of
+        # the signal, so a signal exactly one frame long yields no frames.
+        with pytest.raises(IndexError, match="longer than"):
+            siganalysis.stft(
+                np.zeros(SAMPLING_RATE_HZ), SAMPLING_RATE_HZ, 1, HOP_SIZE_SEC
+            )
+
+    def test_frame_shorter_than_one_sample(self, two_tone_signal):
+        with pytest.raises(ValueError, match="frame is shorter than one sample"):
+            siganalysis.stft(two_tone_signal, SAMPLING_RATE_HZ, 0, HOP_SIZE_SEC)
+
+    def test_hop_shorter_than_one_sample(self, two_tone_signal):
+        with pytest.raises(ValueError, match="hop is shorter than one sample"):
+            siganalysis.stft(two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, 0)
+
     def test_stft_another_freq_bin_size(self, two_tone_signal):
         frame_size_sec = 0.5
         *_, freq_bin_size = siganalysis.stft(
