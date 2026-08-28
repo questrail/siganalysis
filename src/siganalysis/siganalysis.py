@@ -16,6 +16,7 @@ from importlib.metadata import version
 import matplotlib.axes
 import matplotlib.image
 import matplotlib.pyplot as plt
+import matplotlib.ticker
 
 # Numerical analysis related imports
 import numpy as np
@@ -461,8 +462,8 @@ def plot_peak_hold(
         axis.set_xlabel(xlabel)
     if ylabel is not None:
         axis.set_ylabel(ylabel)
-    axis.xaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
-    axis.yaxis.set_major_formatter(plt.FormatStrFormatter("%g"))
+    axis.xaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%g"))
+    axis.yaxis.set_major_formatter(matplotlib.ticker.FormatStrFormatter("%g"))
     axis.grid(visible=True, which="major", color="0.25", linestyle="-")
     axis.grid(visible=True, which="minor", color="0.75", linestyle="-")
     axis.set_axisbelow(True)
