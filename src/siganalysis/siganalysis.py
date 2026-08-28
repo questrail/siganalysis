@@ -79,7 +79,9 @@ def stft(
         hop_size_sec: Hop size given in seconds. The hop size is the time
             by which the frame should be shifted forward for the next
             FFT. It is not uncommon for this to be less than the frame
-            size so that there is some amount of overlap.
+            size so that there is some amount of overlap. Both the frame
+            size and the hop size are truncated to a whole number of
+            samples at the given sampling frequency.
         use_hamming_window: A Boolean indicating if the Hamming window
             should be used when performing the FFT. Using a Hamming window
             helps.
@@ -159,10 +161,11 @@ def stft(
     x[:, 1:] = x[:, 1:] * non_dc_normalization
     x[:, 0] = x[:, 0] / num_frame_samples
 
-    # Create the time vector
-    # FIXME(mdr): Need to add test to make sure this is correctly calculated.
-    # Might want to refactor into separate function.
-    time_vector_stft = np.linspace(0, (x.shape[0] - 1) * hop_size_sec, x.shape[0])
+    # Create the time vector. Each frame advances by num_hop_samples, which is
+    # the requested hop truncated to a whole number of samples, so the time
+    # step has to be derived from that rather than from hop_size_sec.
+    sec_per_hop = num_hop_samples / sampling_frequency_hz
+    time_vector_stft = np.arange(x.shape[0]) * sec_per_hop
 
     # Calculate the width of each frequency bin
     hz_per_freq_bin = sampling_frequency_hz / num_frame_samples
@@ -361,7 +364,7 @@ def plot_spectrogram(
             size.
 
     Returns:
-        matplolib handle to the spectrogram
+        matplotlib handle to the spectrogram
     """
     if freq_plot_range is None:
         start_freq_plot = freq_vector[0]
@@ -438,12 +441,7 @@ def plot_peak_hold(
         limit_array: An optional 1D numpy ndarray containing the limits for the
             plotted data of dtype = [('frequency', 'f8'), ('amplitude', 'f8')]
 
-    Returns:
-        matplolib handle to the axis #FIXME(mdr): As of 05-Jul-22, this
-            function appears to not return anything. Was this comment ever
-            correct?
-
-    Raises:
+    The peak hold is drawn onto the given axis. Nothing is returned.
     """
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
     if trace_label is not None:

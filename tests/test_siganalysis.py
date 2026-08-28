@@ -102,6 +102,52 @@ class TestShortTimeFourierTransform:
         )
         assert freq_bin_size == 1 / FRAME_SIZE_SEC
 
+    def test_stft_time_vector_starts_at_zero(self, two_tone_signal):
+        _, time_array_stft, *_ = siganalysis.stft(
+            two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
+        )
+        assert time_array_stft[0] == 0
+
+    def test_stft_time_vector_steps_by_the_hop_size(self, two_tone_signal):
+        data_stft, time_array_stft, *_ = siganalysis.stft(
+            two_tone_signal, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
+        )
+        assert time_array_stft.size == data_stft.shape[0]
+        assert np.diff(time_array_stft) == pytest.approx(HOP_SIZE_SEC)
+        assert time_array_stft[-1] == pytest.approx(
+            (data_stft.shape[0] - 1) * HOP_SIZE_SEC
+        )
+
+    def test_stft_time_vector_uses_the_truncated_hop(self):
+        # A hop of 0.0015 sec is 1.5 samples at 1 kHz, and a frame is taken
+        # every whole sample, so the frames really advance by 0.001 sec.
+        sampling_rate_hz = 1000
+        hop_size_sec = 0.0015
+        truncated_hop_sec = int(hop_size_sec * sampling_rate_hz) / sampling_rate_hz
+        assert truncated_hop_sec != hop_size_sec
+
+        _, time_array_stft, *_ = siganalysis.stft(
+            np.zeros(10000), sampling_rate_hz, 0.5, hop_size_sec
+        )
+        assert np.diff(time_array_stft) == pytest.approx(truncated_hop_sec)
+
+    def test_stft_time_vector_matches_the_frame_start_times(self):
+        # Each frame starts at a known sample, so the reported time for a
+        # frame has to be that sample divided by the sampling frequency.
+        sampling_rate_hz = 1000
+        frame_size_sec = 0.1
+        hop_size_sec = 0.03
+        num_hop_samples = int(hop_size_sec * sampling_rate_hz)
+
+        data_stft, time_array_stft, *_ = siganalysis.stft(
+            np.zeros(1000), sampling_rate_hz, frame_size_sec, hop_size_sec
+        )
+        expected = [
+            frame * num_hop_samples / sampling_rate_hz
+            for frame in range(data_stft.shape[0])
+        ]
+        assert list(time_array_stft) == pytest.approx(expected)
+
     def test_input_shorter_than_one_frame(self):
         with pytest.raises(IndexError, match="longer than"):
             siganalysis.stft(
