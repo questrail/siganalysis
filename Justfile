@@ -83,10 +83,19 @@ deploy: release-check lint check test-all build smoke
   #!/usr/bin/env bash
   set -euo pipefail
   version="$(uv version --short)"
+  # Prompt for the token rather than reading it from a store, so that nothing
+  # extra has to be installed and the token stays out of the shell history.
+  # Nothing echoes while it is pasted.
+  read -rsp "PyPI token for v${version} (pypi-...): " token
+  echo
+  if [ -z "${token}" ]; then echo "No token given."; exit 1; fi
+  case "${token}" in
+    pypi-*) ;;
+    *) echo "That does not look like a PyPI API token."; exit 1 ;;
+  esac
   # Tag only after PyPI accepts the upload, so that a tag is evidence the
   # release shipped rather than evidence it was attempted.
-  UV_PUBLISH_TOKEN="$(security find-generic-password -s pypi-siganalysis -w)" \
-    uv publish
+  UV_PUBLISH_TOKEN="${token}" uv publish
   git tag -a "v${version}" -m "Release v${version}"
   git push origin "v${version}"
   echo "Published and tagged v${version}"
