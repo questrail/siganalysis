@@ -58,6 +58,14 @@ siganalysis.plot_peak_hold(axis, stft_data, freq_array)
 ```
 
 
+## Release Notes
+
+Release notes describing what changed and what a caller has to update
+are posted to the [releases page][releases] and kept in
+[docs/releases][release notes]. The [CHANGELOG][] records every change,
+including the releases that predate those notes.
+
+
 ## Contributing
 
 Contributions are welcome! To contribute please:
@@ -92,20 +100,62 @@ $ just out     # List the outdated dependencies
 ```
 
 
+## Making a Release
+
+Releasing is a single recipe, `just deploy`, which refuses to start
+unless everything it needs is in place. Prepare the release first:
+
+1. Bump the version with `uv version --bump minor`, which updates both
+   `pyproject.toml` and `uv.lock`.
+2. Add the entry for the new version to the [CHANGELOG][].
+3. Write the release notes as `docs/releases/vX.Y.Z.md`.
+4. Commit and push, since a release is not allowed to get ahead of the
+   repository.
+
+```bash
+$ uv version --bump minor
+$ git commit -am "Release vX.Y.Z"
+$ git push origin master
+$ just deploy
+```
+
+`just deploy` confirms the tree is ready, lints, type checks, runs the
+tests against every supported Python, builds from a cleared `dist/`,
+installs the built wheel on its own to confirm that it imports, and then
+asks for a PyPI token and publishes. The tag is written and pushed only
+after PyPI accepts the upload, so that a tag is evidence a release
+shipped rather than evidence that one was attempted. Do not tag by hand.
+
+Run `just release-check` on its own at any point to see which of those
+conditions is not yet met.
+
+Finally, post the notes to the [releases page][releases]. The first line
+of the notes file is a heading that GitHub renders from the title
+already, so leave it out:
+
+```bash
+$ tail -n +3 docs/releases/vX.Y.Z.md |
+    gh release create vX.Y.Z --title vX.Y.Z --notes-file -
+```
+
+
 ## License
 
 [siganalysis][] is released under the MIT license. Please see the
 [LICENSE.txt][] file for more information.
 
 
+[CHANGELOG]: https://github.com/questrail/siganalysis/blob/master/CHANGELOG.md
 [just]: https://github.com/casey/just
-[LICENSE.txt]: https://github.com/questrail/siganalysis/blob/develop/LICENSE.txt
+[LICENSE.txt]: https://github.com/questrail/siganalysis/blob/master/LICENSE.txt
 [license image]: http://img.shields.io/pypi/l/siganalysis.svg
 [numpy]: http://www.numpy.org
 [matplotlib]: http://matplotlib.org
 [pull request]: https://help.github.com/articles/using-pull-requests
 [pypi ver image]: http://img.shields.io/pypi/v/siganalysis.svg
 [pypi ver link]: https://pypi.python.org/pypi/siganalysis/
+[release notes]: https://github.com/questrail/siganalysis/tree/master/docs/releases
+[releases]: https://github.com/questrail/siganalysis/releases
 [scipy]: http://www.scipy.org
 [siganalysis]: https://github.com/questrail/siganalysis
 [stft]: http://en.wikipedia.org/wiki/Short-time_Fourier_transform
