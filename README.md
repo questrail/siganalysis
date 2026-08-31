@@ -27,6 +27,14 @@ To install using pip:
 $ pip install siganalysis
 ```
 
+The plotting functions need [matplotlib][], which is an optional
+dependency so that it is only installed for those who plot. Install it
+alongside [siganalysis][] with the `plotting` extra:
+
+```bash
+$ pip install siganalysis[plotting]
+```
+
 **Source:** https://github.com/questrail/siganalysis
 
 
@@ -36,7 +44,18 @@ $ pip install siganalysis
 
 - [numpy][]
 - [scipy][]
-- [matplotlib][]
+
+The plotting functions, `plot_spectrogram()` and `plot_peak_hold()`,
+additionally require [matplotlib][], which is installed with the
+`plotting` extra described above. They live in `siganalysis.plotting`,
+so that importing [siganalysis][] does not import [matplotlib][], but
+they remain reachable from the package itself:
+
+```python
+import siganalysis
+
+siganalysis.plot_peak_hold(axis, stft_data, freq_array)
+```
 
 
 ## Contributing

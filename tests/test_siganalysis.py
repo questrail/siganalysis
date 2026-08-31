@@ -1,4 +1,7 @@
 import itertools
+import subprocess
+import sys
+import textwrap
 
 import matplotlib
 import matplotlib.pyplot as plt
@@ -6,7 +9,7 @@ import numpy as np
 import pytest
 
 import siganalysis
-from siganalysis.siganalysis import _bin_holding
+from siganalysis.plotting import _bin_holding
 
 # Draw into a buffer rather than opening a window when testing the plots.
 matplotlib.use("Agg")
@@ -862,3 +865,105 @@ class TestPlotPeakHold:
     def test_one_dimensional_stft_data(self, axis, freq_array):
         with pytest.raises(ValueError, match="needs to be 2D"):
             siganalysis.plot_peak_hold(axis, np.arange(3, dtype=float), freq_array)
+
+
+class TestPackageLayout:
+    """The plotting lives apart from the analysis, which is issue #5.
+
+    matplotlib is an optional dependency, so importing the package must not
+    import it, while the plotting functions stay reachable from the package.
+    """
+
+    def _run(self, code: str) -> str:
+        # A subprocess, because this test session has already imported
+        # matplotlib and sys.modules cannot be un-imported reliably.
+        result = subprocess.run(
+            [sys.executable, "-c", textwrap.dedent(code)],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return result.stdout.strip()
+
+    def test_importing_the_package_does_not_import_matplotlib(self):
+        assert (
+            self._run("""
+            import sys
+            import siganalysis
+            print("matplotlib" in sys.modules)
+            """)
+            == "False"
+        )
+
+    def test_touching_a_plotting_name_imports_matplotlib(self):
+        assert (
+            self._run("""
+            import sys
+            import siganalysis
+            siganalysis.plot_spectrogram
+            print("matplotlib" in sys.modules)
+            """)
+            == "True"
+        )
+
+    def test_the_analysis_runs_without_matplotlib_installed(self):
+        # Block matplotlib outright, standing in for it not being installed.
+        assert (
+            self._run("""
+            import sys
+            from importlib.abc import MetaPathFinder
+
+            class Block(MetaPathFinder):
+                def find_spec(self, fullname, path=None, target=None):
+                    if fullname.split(".")[0] == "matplotlib":
+                        raise ModuleNotFoundError(fullname)
+                    return None
+
+            sys.meta_path.insert(0, Block())
+            import numpy as np
+            import siganalysis
+            data, *_ = siganalysis.stft(np.zeros(1000), 1000, 0.1, 0.1)
+            print(data.shape[0])
+            """)
+            == "9"
+        )
+
+    def test_plotting_without_matplotlib_says_what_to_install(self):
+        assert (
+            self._run("""
+            import sys
+            from importlib.abc import MetaPathFinder
+
+            class Block(MetaPathFinder):
+                def find_spec(self, fullname, path=None, target=None):
+                    if fullname.split(".")[0] == "matplotlib":
+                        raise ModuleNotFoundError(fullname)
+                    return None
+
+            sys.meta_path.insert(0, Block())
+            import siganalysis
+            try:
+                siganalysis.plot_peak_hold
+            except ImportError as error:
+                print("siganalysis[plotting]" in str(error))
+            """)
+            == "True"
+        )
+
+    @pytest.mark.parametrize("name", ["plot_spectrogram", "plot_peak_hold"])
+    def test_the_plotting_names_resolve_from_the_package(self, name):
+        assert callable(getattr(siganalysis, name))
+
+    @pytest.mark.parametrize("name", ["plot_spectrogram", "plot_peak_hold"])
+    def test_the_plotting_names_are_listed(self, name):
+        # __getattr__ would otherwise hide them from dir() and tab completion.
+        assert name in dir(siganalysis)
+
+    def test_an_unknown_name_still_raises_attribute_error(self):
+        missing = "not_a_real_function"
+        with pytest.raises(AttributeError, match="has no attribute"):
+            getattr(siganalysis, missing)
+
+    def test_everything_in_all_is_reachable(self):
+        for name in siganalysis.__all__:
+            assert getattr(siganalysis, name) is not None

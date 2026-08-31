@@ -514,13 +514,18 @@ name = "siganalysis"
 version = "0.7.0"
 source = { editable = "." }
 dependencies = [
-    { name = "matplotlib" },
     { name = "numpy" },
     { name = "scipy" },
 ]
 
+[package.optional-dependencies]
+plotting = [
+    { name = "matplotlib" },
+]
+
 [package.dev-dependencies]
 dev = [
+    { name = "matplotlib" },
     { name = "pytest" },
     { name = "ruff" },
     { name = "ty" },
@@ -528,13 +533,15 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "matplotlib", specifier = ">=3.10.0" },
+    { name = "matplotlib", marker = "extra == 'plotting'", specifier = ">=3.10.0" },
     { name = "numpy", specifier = ">=2.2.0" },
     { name = "scipy", specifier = ">=1.14.1" },
 ]
+provides-extras = ["plotting"]
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "matplotlib", specifier = ">=3.10.0" },
     { name = "pytest", specifier = ">=9.1.1" },
     { name = "ruff", specifier = ">=0.16.5" },
     { name = "ty", specifier = ">=0.0.75" },

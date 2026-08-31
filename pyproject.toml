@@ -9,7 +9,7 @@ authors = [
   { name = "Matthew Rankin", email = "369937+matthewrankin@users.noreply.github.com" },
 ]
 requires-python = ">=3.12"
-dependencies = ["matplotlib>=3.10.0", "numpy>=2.2.0", "scipy>=1.14.1"]
+dependencies = ["numpy>=2.2.0", "scipy>=1.14.1"]
 classifiers = [
   'Programming Language :: Python',
   'Programming Language :: Python :: 3',
@@ -21,6 +21,10 @@ classifiers = [
   'Intended Audience :: Developers',
   'Topic :: Software Development :: Libraries :: Python Modules',
 ]
+
+[project.optional-dependencies]
+# matplotlib is needed only to plot, so it is not pulled in by default.
+plotting = ["matplotlib>=3.10.0"]
 
 [project.urls]
 Homepage = "https://github.com/questrail/siganalysis"
@@ -45,6 +49,8 @@ include = ["src"]
 
 [dependency-groups]
 dev = [
+    # The tests cover the plotting, so the extra is needed here.
+    "matplotlib>=3.10.0",
     "pytest>=9.1.1",
     "ruff>=0.16.5",
     "ty>=0.0.75",

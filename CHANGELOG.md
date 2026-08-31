@@ -4,6 +4,16 @@ This file contains all notable changes to the [siganalysis][] project.
 ## Unreleased
 
 ### Added
+- The plotting functions live in `siganalysis.plotting`, and matplotlib
+  is now an optional dependency installed with the `plotting` extra, so
+  that it is only installed for those who plot. Closes #5.
+
+  `siganalysis.plot_spectrogram()` and `siganalysis.plot_peak_hold()`
+  still resolve, so no caller has to change. The package imports the
+  plotting module on the first use of either name, which keeps
+  matplotlib out of a plain `import siganalysis` while leaving both
+  reachable where they always were. Plotting without matplotlib
+  installed raises an ImportError naming the extra to install.
 - The functions taking STFT data now check it against the vectors
   describing its axes, and say what does not line up rather than failing
   further down with an error about numpy indexing. `plot_spectrogram()`
@@ -41,6 +51,8 @@ This file contains all notable changes to the [siganalysis][] project.
   the neighboring bins.
 
 ### Changed
+- **matplotlib is no longer installed by default.** An existing install
+  that plots needs `pip install siganalysis[plotting]` on upgrade.
 - **`plot_spectrogram()` draws a slightly different range** for a plot
   range that does not land on a bin. The bin holding a value is now the
   one whose value is nearest to it, rather than the one found by
