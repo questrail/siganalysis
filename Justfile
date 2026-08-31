@@ -1,3 +1,7 @@
+# The Python versions listed in the pyproject.toml classifiers, which the
+# test-all recipe runs the suite against.
+python_versions := "3.12 3.13"
+
 # List the available justfile recipes
 [group('general')]
 @default:
@@ -35,6 +39,18 @@ fix:
 test *args:
   uv run pytest {{args}}
 
+# Test code using pytest on every supported Python
+[group('test')]
+test-all:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # There is no CI, so this is the only thing keeping the versions claimed in
+  # the pyproject.toml classifiers honest.
+  for v in {{python_versions}}; do
+    echo "== Python $v =="
+    uv run --isolated --python "$v" --extra plotting --with pytest pytest -q
+  done
+
 # Add dependency
 [group('dependencies')]
 add dep:
@@ -61,10 +77,60 @@ out:
 lock:
   uv lock
 
-# Check, test, build, and publish to PyPI
+# Check, test, build, smoke test, publish to PyPI, and then tag
 [group('deploy')]
-deploy: lint check test
+deploy: release-check lint check test-all build smoke
+  #!/usr/bin/env bash
+  set -euo pipefail
+  version="$(uv version --short)"
+  # Tag only after PyPI accepts the upload, so that a tag is evidence the
+  # release shipped rather than evidence it was attempted.
+  UV_PUBLISH_TOKEN="$(security find-generic-password -s pypi-siganalysis -w)" \
+    uv publish
+  git tag -a "v${version}" -m "Release v${version}"
+  git push origin "v${version}"
+  echo "Published and tagged v${version}"
+
+# Confirm the tree is ready to release the version in pyproject.toml
+[group('deploy')]
+release-check:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  version="$(uv version --short)"
+  echo "Preparing v${version}"
+  if [ -n "$(git status --porcelain)" ]; then echo "Working tree is dirty."; exit 1; fi
+  if [ "$(git rev-parse --abbrev-ref HEAD)" != "master" ]; then echo "Not on master."; exit 1; fi
+  git fetch --quiet origin
+  if [ -n "$(git log origin/master..HEAD --oneline)" ]; then echo "Unpushed commits."; exit 1; fi
+  if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
+    echo "Tag v${version} already exists."; exit 1
+  fi
+  if ! grep -q "## v${version}" CHANGELOG.md; then
+    echo "No CHANGELOG entry for v${version}."; exit 1
+  fi
+  echo "Ready."
+
+# Build the sdist and wheel from a clean dist/
+[group('deploy')]
+build:
+  # Clearing dist/ leaves uv publish exactly the current version to upload,
+  # rather than every build the directory has ever collected.
+  rm -rf dist
   uv build
-  # dist/ keeps every build, and uv publish uploads dist/* by default, so
-  # check the index and skip the versions already published.
-  uv publish --check-url https://pypi.org/simple/
+
+# Install the built wheel on its own and check that it works
+[group('deploy')]
+smoke:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # The tests all run against the source tree, so only this catches a wheel
+  # missing a module or one that makes matplotlib a hard dependency.
+  version="$(uv version --short)"
+  wheel="./dist/siganalysis-${version}-py3-none-any.whl"
+  run() { uv run --isolated --python 3.12 --no-project --with "$wheel" python -c "$1"; }
+  run "import siganalysis, importlib.util; assert siganalysis.__version__ == '${version}', siganalysis.__version__; assert callable(siganalysis.stft); assert importlib.util.find_spec('matplotlib') is None, 'matplotlib is a hard dependency'; print('imports without matplotlib: ok')"
+  # Reaching a plotting name without matplotlib has to fail, and say so.
+  if run "import siganalysis; siganalysis.plot_spectrogram" 2>/dev/null; then
+    echo "plot_spectrogram resolved without matplotlib installed."; exit 1
+  fi
+  echo "wheel ok"
