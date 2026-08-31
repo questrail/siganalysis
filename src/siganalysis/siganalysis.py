@@ -372,17 +372,64 @@ def smooth2(x: npt.NDArray, beta: int = 3, window_len: int = 11) -> npt.NDArray:
     Returns:
         An ndarrary containing the smoothed signal.
 
+    Raises:
+        ValueError: The input is not one dimensional.
+        IndexError: The input is shorter than the window.
+
     """
-    # If window_len is not odd, add one so that it is odd
+    if x.ndim != 1:
+        raise ValueError("Function smooth2 only accepts 1D arrays.")
+
+    # If window_len is not odd, add one so that it is odd. This happens before
+    # the length is checked below, since it is the window that gets used that
+    # has to fit within the signal.
     if window_len & 1:
         pass
     else:
         window_len += 1
+
+    if x.size < window_len:
+        raise IndexError("Input vector needs to be bigger than window size.")
+
     s = np.r_[x[window_len - 1 : 0 : -1], x, x[-1:-window_len:-1]]
     w = np.kaiser(window_len, beta)
     y = np.convolve(w / w.sum(), s, mode="valid")
     samples_to_strip = (window_len - 1) // 2
     return y[samples_to_strip : len(y) - samples_to_strip]
+
+
+def _check_stft_data(
+    stft_data: npt.NDArray,
+    time_vector: npt.NDArray | None = None,
+    freq_vector: npt.NDArray | None = None,
+) -> None:
+    """Check STFT data against the vectors describing its axes.
+
+    Args:
+        stft_data: The 2D array of shape (time, freq) to check.
+        time_vector: An optional vector that has to match the time axis.
+        freq_vector: An optional vector that has to match the frequency axis.
+
+    Raises:
+        ValueError: The stft_data is not two dimensional.
+        IndexError: A vector does not describe the axis it is given for.
+
+    """
+    if stft_data.ndim != 2:
+        raise ValueError(
+            f"The STFT data needs to be 2D with a shape of (time, freq), but "
+            f"it has {stft_data.ndim} dimension(s)."
+        )
+    if time_vector is not None and time_vector.size != stft_data.shape[0]:
+        raise IndexError(
+            f"The size of the time vector, {time_vector.size}, does not match "
+            f"the {stft_data.shape[0]} time bins in the STFT data."
+        )
+    if freq_vector is not None and freq_vector.size != stft_data.shape[1]:
+        raise IndexError(
+            f"The size of the freq vector, {freq_vector.size}, does not match "
+            f"the {stft_data.shape[1]} frequency bins in the STFT data."
+        )
 
 
 def calculate_peak_hold(
@@ -401,13 +448,12 @@ def calculate_peak_hold(
             and amplitude with the dtype [(freq, amp)]
 
     Raises:
-        ValueError: The frequency_array and stft_data[1] are not the same
-            length.
+        ValueError: The stft_data is not two dimensional.
+        IndexError: The frequency_array does not describe the frequency axis
+            of the stft_data.
+
     """
-    if frequency_array.size != stft_data.shape[1]:
-        raise IndexError(
-            "The size of the frequency_array does not match the STFT data."
-        )
+    _check_stft_data(stft_data, freq_vector=frequency_array)
     data_type = np.dtype([("frequency", "f8"), ("amplitude", "f8")])
     peak_hold = np.zeros(frequency_array.size, dtype=data_type)
     peak_hold["frequency"] = frequency_array
@@ -482,7 +528,20 @@ def plot_spectrogram(
 
     Returns:
         matplotlib handle to the spectrogram
+
+    Raises:
+        ValueError: The stft_data is not two dimensional.
+        IndexError: A vector does not describe the axis it is given for, or
+            holds fewer than the two values needed to give a step size.
+
     """
+    _check_stft_data(stft_data, time_vector=time_vector, freq_vector=freq_vector)
+    for name, vector in (("time_vector", time_vector), ("freq_vector", freq_vector)):
+        if vector.size < 2:
+            raise IndexError(
+                f"The {name} needs at least two values to give a step size, "
+                f"but it holds {vector.size}."
+            )
     if freq_plot_range is None:
         start_freq_plot = freq_vector[0]
         stop_freq_plot = freq_vector[-1]
@@ -570,7 +629,22 @@ def plot_peak_hold(
             plotted data of dtype = [('frequency', 'f8'), ('amplitude', 'f8')]
 
     The peak hold is drawn onto the given axis. Nothing is returned.
+
+    Raises:
+        ValueError: The stft_data is not two dimensional, or the limit_array
+            does not carry the fields it is read by.
+        IndexError: The frequency_array does not describe the frequency axis
+            of the stft_data.
+
     """
+    if limit_array is not None:
+        fields = limit_array.dtype.names
+        if fields is None or not {"frequency", "amplitude"}.issubset(fields):
+            raise ValueError(
+                "The limit_array needs a structured dtype carrying "
+                "'frequency' and 'amplitude', such as the array that "
+                "calculate_peak_hold() returns."
+            )
     peak_hold = calculate_peak_hold(stft_data, frequency_array)
     if trace_label is not None:
         axis.loglog(peak_hold["frequency"], peak_hold["amplitude"], label=trace_label)
@@ -621,14 +695,12 @@ def single_frequency_over_time(
             [('time', 'f8'), ('amplitude', 'f8')]
 
     Raises:
+        ValueError: The stft_data is not two dimensional.
         IndexError: The size of the STFT does not match the given frequency
             and/or time arrays.
+
     """
-    # Check that the arrays are the correct size
-    if freq_array.size != stft_data.shape[1]:
-        raise IndexError("The size of the freq_array does not match the STFT data.")
-    if time_array.size != stft_data.shape[0]:
-        raise IndexError("The size of the time_array does not match the STFT data.")
+    _check_stft_data(stft_data, time_vector=time_array, freq_vector=freq_array)
     # Create the array to return the time and amplitude
     data_type = np.dtype([("time", "f8"), ("amplitude", "f8")])
     stft_at_frequency = np.zeros(time_array.size, dtype=data_type)

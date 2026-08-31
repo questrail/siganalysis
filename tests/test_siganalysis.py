@@ -361,6 +361,16 @@ class TestShortTimeFourierTransform:
                         f"{name} and {other_name} gave identical results"
                     )
 
+    def test_stft_accepts_integer_input(self, two_tone_signal):
+        # A recorder gives integer samples, so integers have to work. This is
+        # why the arguments are not checked for a floating point dtype.
+        as_integers = (1000 * two_tone_signal).astype(np.int16)
+        data_stft, *_ = siganalysis.stft(
+            as_integers, SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
+        )
+        assert data_stft.dtype == np.float64
+        assert data_stft.max() > 0
+
     def test_stft_unknown_window(self, two_tone_signal):
         with pytest.raises(ValueError, match="Window must be None or one of"):
             siganalysis.stft(
@@ -399,6 +409,11 @@ class TestPeakHold:
         data_stft, _, freq_array_stft, _ = single_tone_stft
         with pytest.raises(IndexError):
             siganalysis.calculate_peak_hold(data_stft, freq_array_stft[:-1])
+
+    def test_peak_hold_one_dimensional_stft_data(self, single_tone_stft):
+        _, _, freq_array_stft, _ = single_tone_stft
+        with pytest.raises(ValueError, match="needs to be 2D"):
+            siganalysis.calculate_peak_hold(np.arange(3, dtype=float), freq_array_stft)
 
 
 class TestFrequencyConversion:
@@ -485,6 +500,12 @@ class TestSingleFrequencyOverTime:
         with pytest.raises(IndexError):
             siganalysis.single_frequency_over_time(
                 stft_data, np.arange(9) * 2.0, time_array, 4
+            )
+
+    def test_one_dimensional_stft_data(self, time_array):
+        with pytest.raises(ValueError, match="needs to be 2D"):
+            siganalysis.single_frequency_over_time(
+                np.arange(3, dtype=float), np.arange(3, dtype=float), time_array, 1
             )
 
     def test_time_array_size_error(self, stft_data):
@@ -582,6 +603,37 @@ class TestPlotSpectrogram:
         ]
         assert time_centers == pytest.approx(list(time_vector[2:6]))
         assert freq_centers == pytest.approx(list(freq_vector[2:6]))
+
+    def test_mismatched_time_vector(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        # This used to plot happily, mislabelling the axes with a time vector
+        # that did not describe the data.
+        with pytest.raises(IndexError, match="time vector"):
+            siganalysis.plot_spectrogram(
+                spectrogram_data, time_vector[:-1], freq_vector, axis
+            )
+
+    def test_mismatched_freq_vector(
+        self, spectrogram_data, time_vector, freq_vector, axis
+    ):
+        with pytest.raises(IndexError, match="freq vector"):
+            siganalysis.plot_spectrogram(
+                spectrogram_data, time_vector, freq_vector[:-1], axis
+            )
+
+    def test_one_dimensional_stft_data(self, time_vector, freq_vector, axis):
+        with pytest.raises(ValueError, match="needs to be 2D"):
+            siganalysis.plot_spectrogram(
+                np.arange(10, dtype=float), time_vector, freq_vector, axis
+            )
+
+    def test_a_vector_with_a_single_value(self, axis):
+        # The step size comes from the first two values, so one is not enough.
+        with pytest.raises(IndexError, match="at least two values"):
+            siganalysis.plot_spectrogram(
+                np.ones((1, 1)), np.zeros(1), np.zeros(1), axis
+            )
 
 
 class TestBinHolding:
@@ -717,6 +769,19 @@ class TestSmooth2:
             siganalysis.smooth2(alternating, 10, 5),
         )
 
+    def test_two_dimensional_input(self):
+        with pytest.raises(ValueError, match="only accepts 1D arrays"):
+            siganalysis.smooth2(np.zeros((4, 4)))
+
+    def test_input_shorter_than_the_window(self):
+        # This used to return an empty array rather than saying anything.
+        with pytest.raises(IndexError, match="bigger than window size"):
+            siganalysis.smooth2(np.arange(3, dtype=float), 3, 11)
+
+    def test_input_shorter_than_the_window_once_made_odd(self):
+        with pytest.raises(IndexError, match="bigger than window size"):
+            siganalysis.smooth2(np.arange(4, dtype=float), 3, 4)
+
 
 class TestPlotPeakHold:
     @pytest.fixture
@@ -785,3 +850,15 @@ class TestPlotPeakHold:
     def test_mismatched_frequency_array(self, axis, stft_data, freq_array):
         with pytest.raises(IndexError):
             siganalysis.plot_peak_hold(axis, stft_data, freq_array[:-1])
+
+    def test_a_limit_array_without_the_fields(self, axis, stft_data, freq_array):
+        # A plain ndarray is indexed by field name further down, which used to
+        # fail with an error about how numpy indexing works.
+        with pytest.raises(ValueError, match="structured dtype"):
+            siganalysis.plot_peak_hold(
+                axis, stft_data, freq_array, limit_array=np.arange(3, dtype=float)
+            )
+
+    def test_one_dimensional_stft_data(self, axis, freq_array):
+        with pytest.raises(ValueError, match="needs to be 2D"):
+            siganalysis.plot_peak_hold(axis, np.arange(3, dtype=float), freq_array)

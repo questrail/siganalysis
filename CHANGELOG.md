@@ -4,6 +4,14 @@ This file contains all notable changes to the [siganalysis][] project.
 ## Unreleased
 
 ### Added
+- The functions taking STFT data now check it against the vectors
+  describing its axes, and say what does not line up rather than failing
+  further down with an error about numpy indexing. `plot_spectrogram()`
+  had accepted a time or frequency vector that did not match the data at
+  all, and plotted it against mislabelled axes. `smooth2()` gained the
+  checks `smooth()` already had, having quietly returned an empty array
+  for a window longer than the signal. `plot_peak_hold()` checks that a
+  `limit_array` carries the fields it is read by. Closes #12.
 - Tests for `smooth()`, `smooth2()`, and `plot_peak_hold()`, the three
   functions that still had none. Closes #4.
 - `WINDOW_FUNCTIONS`, the windows `smooth()` accepts, is now exported
