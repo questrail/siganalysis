@@ -117,6 +117,10 @@ release-check:
   if ! grep -q "## v${version}" CHANGELOG.md; then
     echo "No CHANGELOG entry for v${version}."; exit 1
   fi
+  # A clean tree rules out an untracked file, so existing here means committed.
+  if [ ! -f "docs/releases/v${version}.md" ]; then
+    echo "No release notes at docs/releases/v${version}.md."; exit 1
+  fi
   echo "Ready."
 
 # Build the sdist and wheel from a clean dist/
