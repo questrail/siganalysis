@@ -3,7 +3,20 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.8.0 - 2026-08-31
+
 ### Added
+- `stft()` accepts a choice of window through its new `window` argument,
+  rather than only the Hamming window. `STFT_WINDOWS` names the windows
+  offered: `hamming`, `hann` (also spelled `hanning`, as `smooth()`
+  spells it), `blackman`, `blackmanharris`, and `flattop`. Closes #6,
+  which asked for the Hann window that the Agilent 35670A applies.
+
+  `flattop` is worth knowing about: it is the window a spectrum analyzer
+  offers for accurate amplitude. For a tone falling exactly between two
+  bins, the worst case, it reports 0.999 of a 1.0 amplitude against
+  0.821 for `hamming` and 0.650 for no window, at the cost of resolving
+  the neighboring bins.
 - The plotting functions live in `siganalysis.plotting`, and matplotlib
   is now an optional dependency installed with the `plotting` extra, so
   that it is only installed for those who plot. Closes #5.
@@ -22,10 +35,6 @@ This file contains all notable changes to the [siganalysis][] project.
   checks `smooth()` already had, having quietly returned an empty array
   for a window longer than the signal. `plot_peak_hold()` checks that a
   `limit_array` carries the fields it is read by. Closes #12.
-- Tests for `smooth()`, `smooth2()`, and `plot_peak_hold()`, the three
-  functions that still had none. Closes #4.
-- `WINDOW_FUNCTIONS`, the windows `smooth()` accepts, is now exported
-  alongside `STFT_WINDOWS`.
 - `time_slice_zip()` takes an optional `minimum_samples_in_last_slice`.
   A last slice shorter than that is folded into the slice before it, so
   that a sample count just past a multiple of the slice size no longer
@@ -38,45 +47,32 @@ This file contains all notable changes to the [siganalysis][] project.
   `smooth()` had been broken for some time: `np.linspace(-2, 2, 0.1)`
   raises a TypeError, since the third argument is a count rather than a
   step. Closes #10.
-- `stft()` accepts a choice of window through its new `window` argument,
-  rather than only the Hamming window. `STFT_WINDOWS` names the windows
-  offered: `hamming`, `hann` (also spelled `hanning`, as `smooth()`
-  spells it), `blackman`, `blackmanharris`, and `flattop`. Closes #6,
-  which asked for the Hann window that the Agilent 35670A applies.
-
-  `flattop` is worth knowing about: it is the window a spectrum analyzer
-  offers for accurate amplitude. For a tone falling exactly between two
-  bins, the worst case, it reports 0.999 of a 1.0 amplitude against
-  0.821 for `hamming` and 0.650 for no window, at the cost of resolving
-  the neighboring bins.
+- Tests for `smooth()`, `smooth2()`, and `plot_peak_hold()`, the three
+  functions that still had none. Closes #4. The suite has grown from 53
+  tests to 154.
+- `WINDOW_FUNCTIONS`, the windows `smooth()` accepts, is now exported
+  alongside `STFT_WINDOWS`.
+- `siganalysis.__version__` reports the installed version. It was only
+  reachable as `siganalysis.siganalysis.__version__` before.
 
 ### Changed
+- **`stft()` takes `window` in place of `use_hamming_window`.** The
+  argument is the name of a window or None for no window, so
+  `use_hamming_window=False` becomes `window=None` and
+  `use_hamming_window=True` becomes `window="hamming"`, which is also
+  the default. Passing the old argument raises a TypeError.
+- **`stft()` returns different amplitudes when a window is used.** See
+  the fix below. Amplitudes are about 7% (0.594 dB) lower than they
+  were, and the amplitude reported for a tone is now the same with a
+  window on as with it off.
 - **matplotlib is no longer installed by default.** An existing install
   that plots needs `pip install siganalysis[plotting]` on upgrade.
 - **`plot_spectrogram()` draws a slightly different range** for a plot
   range that does not land on a bin. The bin holding a value is now the
   one whose value is nearest to it, rather than the one found by
   truncating. Closes #11.
-- **`stft()` takes `window` in place of `use_hamming_window`.** The
-  argument is the name of a window or None for no window, so
-  `use_hamming_window=False` becomes `window=None` and
-  `use_hamming_window=True` becomes `window="hamming"`, which is also
-  the default. Passing the old argument raises a TypeError.
-- **`stft()` returns different amplitudes when a Hamming window is used.**
-  See the fix below. Amplitudes are now about 7% (0.594 dB) lower, and
-  the amplitude reported for a tone is now the same with the window on as
-  with it off.
 
 ### Fixed
-- `smooth()` returned a signal one sample short of the one given when
-  the window length was even and equal to the length of the signal. The
-  window is made odd before the length is checked now, so such a call
-  raises IndexError rather than quietly returning the wrong length.
-- `_bin_holding()` truncated while `freq_bin()` rounded to nearest, so
-  the module held two different answers to which bin holds a value. For
-  10 Hz bins, 6 Hz gave the 0 Hz bin one way and the 10 Hz bin the
-  other. Both round to nearest now, which is also exactly the set of
-  bins overlapping a requested plot range.
 - `stft()` scaled a Hamming windowed frame by 2 rather than by the gain
   of the window. Applying a window scales every amplitude by the mean of
   its samples, its coherent gain, which is 0.5354 for a Hamming window,
@@ -85,6 +81,15 @@ This file contains all notable changes to the [siganalysis][] project.
   meaningful error when comparing a peak hold against a limit line. A
   1.0 amplitude tone on the center of a bin now reads 1.0 rather than
   1.0708.
+- `_bin_holding()` truncated while `freq_bin()` rounded to nearest, so
+  the module held two different answers to which bin holds a value. For
+  10 Hz bins, 6 Hz gave the 0 Hz bin one way and the 10 Hz bin the
+  other. Both round to nearest now, which is also exactly the set of
+  bins overlapping a requested plot range.
+- `smooth()` returned a signal one sample short of the one given when
+  the window length was even and equal to the length of the signal. The
+  window is made odd before the length is checked now, so such a call
+  raises IndexError rather than quietly returning the wrong length.
 
 ## v0.7.0 - 2026-08-28
 
