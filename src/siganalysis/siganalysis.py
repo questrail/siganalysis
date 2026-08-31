@@ -333,16 +333,19 @@ def smooth(
     if x.ndim != 1:
         raise ValueError("Function smooth only accepts 1D arrays.")
 
-    if x.size < window_len:
-        raise IndexError("Input vector needs to be bigger than window size.")
-
     if window_len < 3:
         return x
 
+    # If window_len is not odd, add one so that it is odd. This happens before
+    # the length is checked below, since it is the window that gets used that
+    # has to fit within the signal.
     if window_len & 1:
         pass
     else:
         window_len += 1
+
+    if x.size < window_len:
+        raise IndexError("Input vector needs to be bigger than window size.")
 
     if window not in WINDOW_FUNCTIONS:
         raise ValueError(
@@ -415,10 +418,21 @@ def calculate_peak_hold(
 def _bin_holding(value: float, vector: npt.NDArray, step: float) -> int:
     """Determine the bin of vector holding value.
 
-    The bin is clamped to the vector, so a value outside the range covered by
-    vector gives the first or the last bin rather than an out of range index.
+    A bin covers half a step either side of its own value, so the bin holding
+    a value is the one whose value is nearest to it. That is the rule
+    freq_bin() applies to a frequency, applied here to any vector.
+
+    Taking the nearest bin at each end of a range also gives exactly the bins
+    that overlap that range. The lowest bin reaching up into the range is the
+    nearest one to its start, and the highest bin reaching down into it is the
+    nearest one to its stop, so no bin holding any part of the range is left
+    out and no bin outside it is drawn in.
+
+    The result is clamped to the vector, so a value outside the range the
+    vector covers gives the first or the last bin rather than an out of range
+    index.
     """
-    return min(max(int((value - vector[0]) / step), 0), vector.size - 1)
+    return min(max(freq_bin(value, vector[0], step), 0), vector.size - 1)
 
 
 def plot_spectrogram(
@@ -452,10 +466,12 @@ def plot_spectrogram(
             assumed to be sorted and to contain equal frequency steps.
         plot_axis: matplotlib axis to which this plot should be added.
         freq_plot_range: An optional tuple containing the start and stop
-            frequency in Hz for the spectrogram plot (frequencies are
-            inclusive).
+            frequency in Hz for the spectrogram plot. Both ends are
+            inclusive, and every bin holding any part of the range is
+            plotted, so a range need not land on a bin.
         time_plot_range: An optional tuple containing the start and stop time
-            in seconds for the spectrogram plot (times are inclusive).
+            in seconds for the spectrogram plot. Both ends are inclusive, on
+            the same terms as freq_plot_range.
         plot_title: An optional string containing the plot title.
         plot_xlabel: An optional string containing the x-axis label.
         plot_ylabel: An optional string containing the y-axis label.

@@ -4,6 +4,10 @@ This file contains all notable changes to the [siganalysis][] project.
 ## Unreleased
 
 ### Added
+- Tests for `smooth()`, `smooth2()`, and `plot_peak_hold()`, the three
+  functions that still had none. Closes #4.
+- `WINDOW_FUNCTIONS`, the windows `smooth()` accepts, is now exported
+  alongside `STFT_WINDOWS`.
 - `time_slice_zip()` takes an optional `minimum_samples_in_last_slice`.
   A last slice shorter than that is folded into the slice before it, so
   that a sample count just past a multiple of the slice size no longer
@@ -29,6 +33,10 @@ This file contains all notable changes to the [siganalysis][] project.
   the neighboring bins.
 
 ### Changed
+- **`plot_spectrogram()` draws a slightly different range** for a plot
+  range that does not land on a bin. The bin holding a value is now the
+  one whose value is nearest to it, rather than the one found by
+  truncating. Closes #11.
 - **`stft()` takes `window` in place of `use_hamming_window`.** The
   argument is the name of a window or None for no window, so
   `use_hamming_window=False` becomes `window=None` and
@@ -40,6 +48,15 @@ This file contains all notable changes to the [siganalysis][] project.
   with it off.
 
 ### Fixed
+- `smooth()` returned a signal one sample short of the one given when
+  the window length was even and equal to the length of the signal. The
+  window is made odd before the length is checked now, so such a call
+  raises IndexError rather than quietly returning the wrong length.
+- `_bin_holding()` truncated while `freq_bin()` rounded to nearest, so
+  the module held two different answers to which bin holds a value. For
+  10 Hz bins, 6 Hz gave the 0 Hz bin one way and the 10 Hz bin the
+  other. Both round to nearest now, which is also exactly the set of
+  bins overlapping a requested plot range.
 - `stft()` scaled a Hamming windowed frame by 2 rather than by the gain
   of the window. Applying a window scales every amplitude by the mean of
   its samples, its coherent gain, which is 0.5354 for a Hamming window,

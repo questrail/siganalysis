@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 
 import siganalysis
+from siganalysis.siganalysis import _bin_holding
 
 # Draw into a buffer rather than opening a window when testing the plots.
 matplotlib.use("Agg")
@@ -581,3 +582,206 @@ class TestPlotSpectrogram:
         ]
         assert time_centers == pytest.approx(list(time_vector[2:6]))
         assert freq_centers == pytest.approx(list(freq_vector[2:6]))
+
+
+class TestBinHolding:
+    """The bin holding a value, which is issue #11.
+
+    A bin covers half a step either side of its own value, so the bin holding
+    a value is the one whose value is nearest to it. freq_bin() applies that
+    rule to a frequency and _bin_holding() applies it to any vector; the two
+    have to agree.
+    """
+
+    @pytest.fixture
+    def freq_vector(self):
+        # Ten bins, 10 Hz wide, centered on 0, 10, ... 90 Hz.
+        return np.arange(10) * 10.0
+
+    def test_the_issue_example(self, freq_vector):
+        # For 10 Hz bins, 12 Hz falls in the second bin, the one covering
+        # 10 Hz +/- 5 Hz, rather than the first.
+        assert _bin_holding(12, freq_vector, 10.0) == 1
+
+    def test_a_value_in_the_upper_half_of_a_bin(self, freq_vector):
+        # 6 Hz is nearer to the 10 Hz bin than to the 0 Hz bin. Truncating,
+        # as this used to, put it in the 0 Hz bin.
+        assert _bin_holding(6, freq_vector, 10.0) == 1
+
+    def test_agrees_with_freq_bin(self, freq_vector):
+        for value in np.arange(-20, 120, 0.5):
+            expected = siganalysis.freq_bin(value, freq_vector[0], 10.0)
+            expected = min(max(expected, 0), freq_vector.size - 1)
+            assert _bin_holding(value, freq_vector, 10.0) == expected
+
+    def test_covers_every_bin_overlapping_a_range(self, freq_vector):
+        # Taking the nearest bin at each end of a range gives exactly the
+        # bins overlapping that range. Checked against a brute force search
+        # over which bins reach into the range, away from the exact bin edges
+        # where a value touches two bins and freq_bin() rounds up by rule.
+        step = 10.0
+        half = step / 2
+        for start in np.arange(0, 90, 2.5):
+            for stop in np.arange(start, 90, 2.5):
+                on_an_edge = any(
+                    abs(((value - freq_vector[0]) / step + 0.5) % 1.0) < 1e-9
+                    for value in (start, stop)
+                )
+                if on_an_edge:
+                    continue
+                overlapping = [
+                    index
+                    for index, center in enumerate(freq_vector)
+                    if center + half >= start and center - half <= stop
+                ]
+                assert _bin_holding(start, freq_vector, step) == overlapping[0]
+                assert _bin_holding(stop, freq_vector, step) == overlapping[-1]
+
+    def test_clamped_to_the_vector(self, freq_vector):
+        assert _bin_holding(-1000, freq_vector, 10.0) == 0
+        assert _bin_holding(1000, freq_vector, 10.0) == freq_vector.size - 1
+
+
+class TestSmooth:
+    @pytest.fixture
+    def alternating(self):
+        return np.array([1.0, 5.0] * 10 + [1.0])
+
+    @pytest.mark.parametrize("window", sorted(siganalysis.WINDOW_FUNCTIONS))
+    def test_output_is_as_long_as_the_input(self, alternating, window):
+        assert siganalysis.smooth(alternating, 5, window).size == alternating.size
+
+    @pytest.mark.parametrize("window_len", range(3, 16))
+    def test_output_length_for_every_window_length(self, window_len):
+        x = np.arange(40, dtype=float)
+        assert siganalysis.smooth(x, window_len).size == x.size
+
+    def test_flat_window_is_a_moving_average(self):
+        x = np.array([0.0, 0.0, 3.0, 0.0, 0.0])
+        # The middle sample averages with its two neighbors either side.
+        assert siganalysis.smooth(x, 3, "flat")[2] == pytest.approx(1.0)
+
+    def test_smoothing_reduces_variation(self, alternating):
+        smoothed = siganalysis.smooth(alternating, 5, "hanning")
+        assert smoothed.std() < alternating.std()
+
+    def test_an_even_window_is_made_odd(self):
+        x = np.arange(40, dtype=float)
+        assert np.array_equal(
+            siganalysis.smooth(x, 4, "flat"), siganalysis.smooth(x, 5, "flat")
+        )
+
+    def test_a_window_shorter_than_three_returns_the_input(self, alternating):
+        assert siganalysis.smooth(alternating, 2) is alternating
+
+    def test_two_dimensional_input(self):
+        with pytest.raises(ValueError, match="only accepts 1D arrays"):
+            siganalysis.smooth(np.zeros((4, 4)))
+
+    def test_input_shorter_than_the_window(self):
+        with pytest.raises(IndexError, match="bigger than window size"):
+            siganalysis.smooth(np.arange(4, dtype=float), 11)
+
+    def test_input_shorter_than_the_window_once_made_odd(self):
+        # A window of 4 becomes 5, which does not fit in 4 samples.
+        with pytest.raises(IndexError, match="bigger than window size"):
+            siganalysis.smooth(np.arange(4, dtype=float), 4)
+
+    def test_unknown_window(self, alternating):
+        with pytest.raises(ValueError, match="Window must be one of"):
+            siganalysis.smooth(alternating, 5, "kaiser")
+
+
+class TestSmooth2:
+    @pytest.fixture
+    def alternating(self):
+        return np.array([1.0, 5.0] * 10 + [1.0])
+
+    @pytest.mark.parametrize("window_len", range(3, 16))
+    def test_output_is_as_long_as_the_input(self, window_len):
+        x = np.arange(40, dtype=float)
+        assert siganalysis.smooth2(x, 3, window_len).size == x.size
+
+    def test_smoothing_reduces_variation(self, alternating):
+        assert siganalysis.smooth2(alternating, 3, 5).std() < alternating.std()
+
+    def test_an_even_window_is_made_odd(self):
+        x = np.arange(40, dtype=float)
+        assert np.array_equal(
+            siganalysis.smooth2(x, 3, 4), siganalysis.smooth2(x, 3, 5)
+        )
+
+    def test_beta_changes_the_result(self, alternating):
+        assert not np.array_equal(
+            siganalysis.smooth2(alternating, 1, 5),
+            siganalysis.smooth2(alternating, 10, 5),
+        )
+
+
+class TestPlotPeakHold:
+    @pytest.fixture
+    def axis(self):
+        figure, axis = plt.subplots()
+        yield axis
+        plt.close(figure)
+
+    @pytest.fixture
+    def stft_data(self):
+        return np.array([[1.0, 2.0, 3.0], [4.0, 1.0, 1.0]])
+
+    @pytest.fixture
+    def freq_array(self):
+        return np.array([10.0, 20.0, 30.0])
+
+    def test_plots_the_peak_of_each_frequency(self, axis, stft_data, freq_array):
+        siganalysis.plot_peak_hold(axis, stft_data, freq_array)
+        assert len(axis.lines) == 1
+        assert list(axis.lines[0].get_xdata()) == list(freq_array)
+        assert list(axis.lines[0].get_ydata()) == [4.0, 2.0, 3.0]
+
+    def test_returns_nothing(self, axis, stft_data, freq_array):
+        assert siganalysis.plot_peak_hold(axis, stft_data, freq_array) is None
+
+    def test_both_axes_are_logarithmic(self, axis, stft_data, freq_array):
+        siganalysis.plot_peak_hold(axis, stft_data, freq_array)
+        assert axis.get_xscale() == "log"
+        assert axis.get_yscale() == "log"
+
+    def test_a_limit_array_is_drawn_as_a_second_line(self, axis, stft_data, freq_array):
+        limit_array = siganalysis.calculate_peak_hold(stft_data, freq_array)
+        limit_array["amplitude"] = 10.0
+        siganalysis.plot_peak_hold(axis, stft_data, freq_array, limit_array=limit_array)
+        assert len(axis.lines) == 2
+        assert list(axis.lines[1].get_ydata()) == [10.0, 10.0, 10.0]
+
+    def test_the_trace_label_is_applied(self, axis, stft_data, freq_array):
+        siganalysis.plot_peak_hold(axis, stft_data, freq_array, trace_label="peak hold")
+        assert axis.lines[0].get_label() == "peak hold"
+
+    def test_the_titles_are_applied(self, axis, stft_data, freq_array):
+        siganalysis.plot_peak_hold(
+            axis,
+            stft_data,
+            freq_array,
+            title="A title",
+            xlabel="An x label",
+            ylabel="A y label",
+        )
+        assert axis.get_title() == "A title"
+        assert axis.get_xlabel() == "An x label"
+        assert axis.get_ylabel() == "A y label"
+
+    def test_the_limits_are_applied(self, axis, stft_data, freq_array):
+        siganalysis.plot_peak_hold(
+            axis,
+            stft_data,
+            freq_array,
+            plot_freq_limits=(10, 30),
+            plot_amp_limits=(0.5, 5),
+        )
+        assert axis.get_xlim() == (10, 30)
+        assert axis.get_ylim() == (0.5, 5)
+
+    def test_mismatched_frequency_array(self, axis, stft_data, freq_array):
+        with pytest.raises(IndexError):
+            siganalysis.plot_peak_hold(axis, stft_data, freq_array[:-1])
