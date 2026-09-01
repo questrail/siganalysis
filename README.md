@@ -24,7 +24,14 @@ spectrum for Electromagnetic Compatibility (EMC) analyses.
 You can install [siganalysis][] either via the Python Package Index
 (PyPI) or from source.
 
-To install using pip:
+To add it to a project managed with [uv][], which records it in your
+`pyproject.toml` and lock file:
+
+```bash
+$ uv add siganalysis
+```
+
+Or to install it with pip:
 
 ```bash
 $ pip install siganalysis
@@ -35,6 +42,7 @@ dependency so that it is only installed for those who plot. Install it
 alongside [siganalysis][] with the `plotting` extra:
 
 ```bash
+$ uv add "siganalysis[plotting]"
 $ pip install siganalysis[plotting]
 ```
 
