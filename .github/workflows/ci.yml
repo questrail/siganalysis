@@ -169,6 +169,17 @@ jobs:
         uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
         with:
           enable-cache: true
+          # Restore the cache but never save it. This job installs exactly
+          # what the 3.13 leg of the matrix installs, from the same lock on
+          # the same runner, so setup-uv computes the same cache key for both
+          # and the two raced to reserve it: one saved, and the other logged
+          # "Failed to save: Unable to reserve cache" on every run. A
+          # cache-suffix would end the race the way the floor job's does, but
+          # that job installs deliberately different versions and so wants an
+          # entry of its own, while this one would only be storing a second
+          # copy of an identical environment. If it happens to run first there
+          # is nothing to restore and it downloads instead.
+          save-cache: false
           python-version: "3.13"
 
       - name: Install the project and its dependencies

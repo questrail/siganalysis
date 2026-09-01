@@ -14,8 +14,10 @@ This file contains all notable changes to the [siganalysis][] project.
   tested promise rather than a hopeful one; the lock file pins the
   newest of each, so nothing else exercises them. A third audits the
   workflows with [zizmor][], the part of the repository that can mint a
-  PyPI credential having otherwise been read by eye alone. Coverage
-  goes to Coveralls from the 3.13 leg.
+  PyPI credential having otherwise been read by eye alone. That job
+  restores the uv cache without saving it, since it installs what the
+  3.13 leg installs and the two would otherwise race to write one key.
+  Coverage goes to Coveralls from the 3.13 leg.
 - Releases publish from a tag rather than from a laptop. `just release`
   refuses a dirty tree, a branch other than `master`, a `master` behind
   its upstream, an empty Unreleased section, or an existing tag; then
