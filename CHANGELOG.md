@@ -5,6 +5,17 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ### Added
 
+- Continuous integration on GitHub Actions, which this project had none
+  of. Every push and pull request now lints, checks formatting, type
+  checks, and runs the suite on 3.12 and 3.13, the versions the
+  `pyproject.toml` classifiers claim. A second job installs the oldest
+  numpy, scipy, and matplotlib that `pyproject.toml` allows, with
+  `--resolution lowest-direct`, so that the version floors are a
+  tested promise rather than a hopeful one; the lock file pins the
+  newest of each, so nothing else exercises them. A third audits the
+  workflows with [zizmor][], the part of the repository that can mint a
+  PyPI credential having otherwise been read by eye alone. Coverage
+  goes to Coveralls from the 3.13 leg.
 - `scripts/smoke_test_wheel.py`, which installs the built wheel where
   `src/` cannot be reached and without the `plotting` extra, then
   checks the version, every public name, and `py.typed`. Every other
@@ -325,3 +336,4 @@ This file contains all notable changes to the [siganalysis][] project.
 [scipy-stubs]: https://github.com/scipy/scipy-stubs
 [siganalysis]: https://github.com/questrail/siganalysis
 [ty]: https://github.com/astral-sh/ty
+[zizmor]: https://docs.zizmor.sh/

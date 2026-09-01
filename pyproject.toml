@@ -74,6 +74,9 @@ addopts = ["--strict-markers", "--strict-config", "--doctest-modules"]
 [tool.coverage.run]
 source = ["siganalysis"]
 branch = true
+# Coveralls maps the report onto the repository, and absolute paths from a
+# runner's checkout directory are not something it can map.
+relative_files = true
 
 [tool.coverage.report]
 show_missing = true
@@ -99,4 +102,5 @@ dev = [
     # pyright cannot see the window functions in scipy.signal.windows without
     # these; scipy ships no usable stubs of its own.
     "scipy-stubs>=1.18.1.0",
+    "zizmor>=1.30.0",
 ]

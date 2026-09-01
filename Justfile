@@ -17,12 +17,13 @@ loc:
 doc term:
   uv run python -m pydoc {{term}}
 
-# Check lint, formatting, and types without modifying any files
+# Check lint, formatting, types, and workflows without modifying any files
 [group('test')]
 lint:
   uv run ruff check
   uv run ruff format --check
   uv run pyright
+  uv run zizmor .github/workflows
 
 # Lint and format code and apply changes
 [group('test')]
