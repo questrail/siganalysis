@@ -31,6 +31,14 @@ This file contains all notable changes to the [siganalysis][] project.
   leak. It signs a [PEP 740][] attestation for each distribution
   against the same identity, and creates a GitHub release carrying the
   CHANGELOG section for that version as its notes.
+- Dependabot keeps the pinned actions and the lock file moving. The
+  actions in both workflows are pinned to commit SHAs, which a fix
+  published upstream does not reach on its own the way a moving tag
+  would, so pinning without something to move it would amount to
+  staying on one commit forever. Dependabot reads `pyproject.toml` and
+  `uv.lock` together as well, so a dependency update arrives as a lock
+  file change that CI checks with `uv sync --locked` rather than as a
+  resolution done on the runner.
 - `scripts/smoke_test_wheel.py`, which installs the built wheel where
   `src/` cannot be reached and without the `plotting` extra, then
   checks the version, every public name, and `py.typed`. Every other
