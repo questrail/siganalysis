@@ -16,6 +16,21 @@ This file contains all notable changes to the [siganalysis][] project.
   workflows with [zizmor][], the part of the repository that can mint a
   PyPI credential having otherwise been read by eye alone. Coverage
   goes to Coveralls from the 3.13 leg.
+- Releases publish from a tag rather than from a laptop. `just release`
+  refuses a dirty tree, a branch other than `master`, a `master` behind
+  its upstream, an empty Unreleased section, or an existing tag; then
+  lints and tests; then shows the entries waiting to ship beside the
+  version each kind of bump would produce, and asks which to cut. It
+  bumps the version, closes out the CHANGELOG, commits, and tags.
+  Pushing the tag publishes. `just release-check` runs the refusals on
+  their own.
+- The release workflow waits on the whole CI run before it uploads
+  anything, confirms the tag sits on `master` and matches the version
+  in `pyproject.toml`, and authenticates to PyPI with
+  [trusted publishing][], so there is no API token to paste, store, or
+  leak. It signs a [PEP 740][] attestation for each distribution
+  against the same identity, and creates a GitHub release carrying the
+  CHANGELOG section for that version as its notes.
 - `scripts/smoke_test_wheel.py`, which installs the built wheel where
   `src/` cannot be reached and without the `plotting` extra, then
   checks the version, every public name, and `py.typed`. Every other
@@ -55,6 +70,10 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ### Removed
 
+- `just deploy`, which published from a laptop against a pasted PyPI
+  token, and `just test-all`, which ran the suite against each
+  supported Python locally because there was no CI to do it. The
+  release workflow and the CI matrix replace them.
 - `AUTHORS.md`, along with the pointer to it in the copyright notice.
   The repository history is the record of who wrote what.
 
@@ -332,8 +351,10 @@ This file contains all notable changes to the [siganalysis][] project.
 [#15]: https://github.com/questrail/siganalysis/issues/15
 [#16]: https://github.com/questrail/siganalysis/issues/16
 [#17]: https://github.com/questrail/siganalysis/issues/17
+[PEP 740]: https://peps.python.org/pep-0740/
 [pyright]: https://microsoft.github.io/pyright/
 [scipy-stubs]: https://github.com/scipy/scipy-stubs
 [siganalysis]: https://github.com/questrail/siganalysis
+[trusted publishing]: https://docs.pypi.org/trusted-publishers/
 [ty]: https://github.com/astral-sh/ty
 [zizmor]: https://docs.zizmor.sh/

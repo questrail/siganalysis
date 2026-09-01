@@ -1,7 +1,3 @@
-# The Python versions listed in the pyproject.toml classifiers, which the
-# test-all recipe runs the suite against.
-python_versions := "3.12 3.13"
-
 # List the available justfile recipes
 [group('general')]
 @default:
@@ -12,10 +8,11 @@ python_versions := "3.12 3.13"
 loc:
   scc --remap-unknown "-*- Justfile -*-":"justfile"
 
-# Search pydoc for given term
-[group('general')]
-doc term:
-  uv run python -m pydoc {{term}}
+# Lint and format code using ruff, applying any fixes
+[group('test')]
+fix:
+  uv run ruff check --fix
+  uv run ruff format
 
 # Check lint, formatting, types, and workflows without modifying any files
 [group('test')]
@@ -24,12 +21,6 @@ lint:
   uv run ruff format --check
   uv run pyright
   uv run zizmor .github/workflows
-
-# Lint and format code and apply changes
-[group('test')]
-fix:
-  uv run ruff check --fix
-  uv run ruff format
 
 # Test code using pytest
 [group('test')]
@@ -40,18 +31,6 @@ test *args:
 [group('test')]
 cov *args:
   uv run pytest --cov --cov-report=term --cov-report=html {{args}}
-
-# Test code using pytest on every supported Python
-[group('test')]
-test-all:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  # There is no CI, so this is the only thing keeping the versions claimed in
-  # the pyproject.toml classifiers honest.
-  for v in {{python_versions}}; do
-    echo "== Python $v =="
-    uv run --isolated --python "$v" --extra plotting --with pytest pytest -q
-  done
 
 # Add dependency
 [group('dependencies')]
@@ -79,65 +58,15 @@ out:
 lock:
   uv lock
 
-# Check, test, build, smoke test, publish to PyPI, and then tag
+# Check, test, and build the distributions that CI will publish
 [group('deploy')]
-deploy: release-check lint test-all build smoke
+build: lint test
   #!/usr/bin/env bash
   set -euo pipefail
-  version="$(uv version --short)"
-  # Prompt for the token rather than reading it from a store, so that nothing
-  # extra has to be installed and the token stays out of the shell history.
-  # Nothing echoes while it is pasted.
-  read -rsp "PyPI token for v${version} (pypi-...): " token
-  echo
-  if [ -z "${token}" ]; then echo "No token given."; exit 1; fi
-  case "${token}" in
-    pypi-*) ;;
-    *) echo "That does not look like a PyPI API token."; exit 1 ;;
-  esac
-  # Tag only after PyPI accepts the upload, so that a tag is evidence the
-  # release shipped rather than evidence it was attempted.
-  UV_PUBLISH_TOKEN="${token}" uv publish
-  git tag -a "v${version}" -m "Release v${version}"
-  git push origin "v${version}"
-  echo "Published and tagged v${version}"
-
-# Confirm the tree is ready to release the version in pyproject.toml
-[group('deploy')]
-release-check:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  version="$(uv version --short)"
-  echo "Preparing v${version}"
-  if [ -n "$(git status --porcelain)" ]; then echo "Working tree is dirty."; exit 1; fi
-  if [ "$(git rev-parse --abbrev-ref HEAD)" != "master" ]; then echo "Not on master."; exit 1; fi
-  git fetch --quiet origin
-  if [ -n "$(git log origin/master..HEAD --oneline)" ]; then echo "Unpushed commits."; exit 1; fi
-  if git rev-parse -q --verify "refs/tags/v${version}" >/dev/null; then
-    echo "Tag v${version} already exists."; exit 1
-  fi
-  if ! grep -q "## v${version}" CHANGELOG.md; then
-    echo "No CHANGELOG entry for v${version}."; exit 1
-  fi
-  # A clean tree rules out an untracked file, so existing here means committed.
-  if [ ! -f "docs/releases/v${version}.md" ]; then
-    echo "No release notes at docs/releases/v${version}.md."; exit 1
-  fi
-  echo "Ready."
-
-# Build the sdist and wheel from a clean dist/
-[group('deploy')]
-build:
-  # Clearing dist/ leaves uv publish exactly the current version to upload,
-  # rather than every build the directory has ever collected.
-  rm -rf dist
-  uv build
-
-# Install the built wheel on its own and check that it works
-[group('deploy')]
-smoke:
-  #!/usr/bin/env bash
-  set -euo pipefail
+  uv build --clear
+  # The same check the release workflow runs before it uploads, so that a
+  # packaging mistake surfaces here rather than on a tag that cannot be undone.
+  #
   # --isolated is what makes the environment the wheel lands in a clean one.
   # Without it uv layers the --with packages over the project's own .venv,
   # where matplotlib and every other dependency is already installed, and the
@@ -145,3 +74,88 @@ smoke:
   # the wheel declares. A runner has no .venv, so only the local run needs it.
   uv run --isolated --no-project --with dist/*.whl \
     python scripts/smoke_test_wheel.py "$(uv version --short)"
+
+# Confirm a release can be cut from the tree as it stands
+[group('deploy')]
+release-check:
+  #!/usr/bin/env bash
+  set -euo pipefail
+  if [ -n "$(git status --porcelain)" ]; then
+    echo "Working tree is dirty; commit or stash these first:" >&2
+    git status --short >&2
+    exit 1
+  fi
+  if [ "$(git branch --show-current)" != master ]; then
+    echo "Releases are cut from master" >&2; exit 1
+  fi
+  behind="$(git rev-list --count HEAD..@{upstream} 2>/dev/null || echo 0)"
+  if [ "$behind" != 0 ]; then
+    echo "master is ${behind} commit(s) behind its upstream; pull first" >&2; exit 1
+  fi
+  if [ -z "$({{just_executable()}} unreleased)" ]; then
+    echo "CHANGELOG.md has no entries under Unreleased" >&2; exit 1
+  fi
+  echo "Ready to release from $(uv version --short)."
+
+# Cut a release
+[group('deploy')]
+release: release-check lint test
+  #!/usr/bin/env bash
+  set -euo pipefail
+  # release-check runs first, as a dependency, so that a dirty tree or an
+  # empty Unreleased section is turned away immediately rather than after a
+  # full lint and test run.
+  unreleased="$({{just_executable()}} unreleased)"
+  current="$(uv version --short)"
+  echo
+  echo "Releasing from ${current}, with these entries under Unreleased:"
+  echo
+  sed 's/^./    &/' <<<"$unreleased"
+  echo
+  echo "    1) patch   ${current} -> $(uv version --short --bump patch --dry-run)"
+  echo "    2) minor   ${current} -> $(uv version --short --bump minor --dry-run)"
+  echo "    3) major   ${current} -> $(uv version --short --bump major --dry-run)"
+  echo "    q) cancel"
+  echo
+  read -r -p "Which release? [1] " choice
+  case "${choice:-1}" in
+    1|p|patch) bump=patch ;;
+    2|m|minor) bump=minor ;;
+    3|M|major) bump=major ;;
+    q|Q) echo "Cancelled."; exit 0 ;;
+    *) echo "Unrecognized choice: ${choice}" >&2; exit 1 ;;
+  esac
+  version="$(uv version --short --bump "$bump" --dry-run)"
+  tag="v${version}"
+  if git rev-parse -q --verify "refs/tags/${tag}" >/dev/null; then
+    echo "Tag ${tag} already exists" >&2; exit 1
+  fi
+  uv version --bump "$bump" --no-sync
+  uv lock --quiet
+  VERSION="$version" python3 - <<'PY'
+  import datetime, os, pathlib
+  heading = f"## v{os.environ['VERSION']} - {datetime.date.today().isoformat()}"
+  p = pathlib.Path("CHANGELOG.md")
+  s = p.read_text()
+  p.write_text(s.replace("## Unreleased\n", f"## Unreleased\n\n{heading}\n", 1))
+  PY
+  git commit -qam "Release ${tag}"
+  git tag -a "${tag}" -m "${tag}"
+  echo
+  echo "Tagged ${tag}. Publish it with:"
+  echo
+  echo "    git push --follow-tags"
+
+# Print the CHANGELOG entries sitting under Unreleased. Both release-check and
+# release read this, one to refuse an empty section and the other to show what
+# is about to ship, so it is written once here.
+[private]
+unreleased:
+  #!/usr/bin/env python3
+  import pathlib, re
+  m = re.search(
+      r"^## Unreleased\s*\n(.*?)(?=^## v)",
+      pathlib.Path("CHANGELOG.md").read_text(),
+      re.S | re.M,
+  )
+  print((m.group(1).strip() if m else ""))
