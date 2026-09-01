@@ -5,6 +5,13 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ### Added
 
+- `scripts/smoke_test_wheel.py`, which installs the built wheel where
+  `src/` cannot be reached and without the `plotting` extra, then
+  checks the version, every public name, and `py.typed`. Every other
+  check runs against the source tree with matplotlib installed, so this
+  is the only one that can catch a packaging mistake, and the only one
+  that can tell whether matplotlib is still optional. `just build` and
+  the release workflow run the same command.
 - `py.typed`, so that the type hints already written reach anyone
   installing the package rather than stopping at this repository.
 - A coverage floor of 95%, which is what the suite covers today. Below

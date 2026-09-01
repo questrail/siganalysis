@@ -137,14 +137,10 @@ build:
 smoke:
   #!/usr/bin/env bash
   set -euo pipefail
-  # The tests all run against the source tree, so only this catches a wheel
-  # missing a module or one that makes matplotlib a hard dependency.
-  version="$(uv version --short)"
-  wheel="./dist/siganalysis-${version}-py3-none-any.whl"
-  run() { uv run --isolated --python 3.12 --no-project --with "$wheel" python -c "$1"; }
-  run "import siganalysis, importlib.util; assert siganalysis.__version__ == '${version}', siganalysis.__version__; assert callable(siganalysis.stft); assert importlib.util.find_spec('matplotlib') is None, 'matplotlib is a hard dependency'; print('imports without matplotlib: ok')"
-  # Reaching a plotting name without matplotlib has to fail, and say so.
-  if run "import siganalysis; siganalysis.plot_spectrogram" 2>/dev/null; then
-    echo "plot_spectrogram resolved without matplotlib installed."; exit 1
-  fi
-  echo "wheel ok"
+  # --isolated is what makes the environment the wheel lands in a clean one.
+  # Without it uv layers the --with packages over the project's own .venv,
+  # where matplotlib and every other dependency is already installed, and the
+  # check below that matplotlib is still optional would pass no matter what
+  # the wheel declares. A runner has no .venv, so only the local run needs it.
+  uv run --isolated --no-project --with dist/*.whl \
+    python scripts/smoke_test_wheel.py "$(uv version --short)"
