@@ -8,6 +8,11 @@
 loc:
   scc --remap-unknown "-*- Justfile -*-":"justfile"
 
+# Search pydoc for given term
+[group('general')]
+doc term:
+  uv run python -m pydoc {{term}}
+
 # Lint and format code using ruff, applying any fixes
 [group('test')]
 fix:
@@ -42,10 +47,16 @@ add dep:
 dev dep:
   uv add --dev {{dep}}
 
-# Update dependency in the project dependencies or any group
+# Update dep to the newest ver allowed by pyproject.toml
 [group('dependencies')]
 up dep:
-  uv lock -P {{dep}}
+  uv lock --upgrade-package {{dep}}
+  uv sync
+
+# Update all dependencies
+[group('dependencies')]
+up-all:
+  uv lock --upgrade
   uv sync
 
 # List the outdated dependencies

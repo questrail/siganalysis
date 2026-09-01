@@ -51,6 +51,10 @@ This file contains all notable changes to the [siganalysis][] project.
 - A coverage floor of 95%, which is what the suite covers today. Below
   that the run fails, so uncovered code has to arrive with either a
   test or a deliberate edit to the floor.
+- `just doc`, `just up-all`, and `just lint`, and a `Justfile` that is
+  otherwise line for line the one in [applyaf][], so that moving
+  between the two projects does not mean learning a second set of
+  recipe names.
 
 ### Changed
 
@@ -359,6 +363,7 @@ This file contains all notable changes to the [siganalysis][] project.
 [#15]: https://github.com/questrail/siganalysis/issues/15
 [#16]: https://github.com/questrail/siganalysis/issues/16
 [#17]: https://github.com/questrail/siganalysis/issues/17
+[applyaf]: https://github.com/questrail/applyaf
 [PEP 740]: https://peps.python.org/pep-0740/
 [pyright]: https://microsoft.github.io/pyright/
 [scipy-stubs]: https://github.com/scipy/scipy-stubs
