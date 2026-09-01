@@ -3,6 +3,12 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Changed
+
+- `.python-version` is tracked rather than ignored. It decides the
+  interpreter a contributor's `uv sync` builds against, and the file
+  was being read while being excluded from the repository.
+
 ### Removed
 
 - `AUTHORS.md`, along with the pointer to it in the copyright notice.
