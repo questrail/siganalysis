@@ -3,8 +3,16 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Added
+
+- `py.typed`, so that the type hints already written reach anyone
+  installing the package rather than stopping at this repository.
+
 ### Changed
 
+- The license is declared as an SPDX expression with `license-files`,
+  which is what replaced the `License ::` classifier that used to
+  carry it.
 - `.python-version` is tracked rather than ignored. It decides the
   interpreter a contributor's `uv sync` builds against, and the file
   was being read while being excluded from the repository.
