@@ -51,7 +51,7 @@ def _bin_holding(value: float, vector: npt.NDArray, step: float) -> int:
     return min(max(freq_bin(value, vector[0], step), 0), vector.size - 1)
 
 
-def plot_spectrogram(
+def plot_spectrogram(  # noqa: PLR0913, PLR0917
     stft_data: npt.NDArray,
     time_vector: npt.NDArray,
     freq_vector: npt.NDArray,
@@ -107,7 +107,7 @@ def plot_spectrogram(
     """
     _check_stft_data(stft_data, time_vector=time_vector, freq_vector=freq_vector)
     for name, vector in (("time_vector", time_vector), ("freq_vector", freq_vector)):
-        if vector.size < 2:
+        if vector.size < 2:  # noqa: PLR2004
             raise IndexError(
                 f"The {name} needs at least two values to give a step size, "
                 f"but it holds {vector.size}."
@@ -168,7 +168,7 @@ def plot_spectrogram(
     return spectrogram
 
 
-def plot_peak_hold(
+def plot_peak_hold(  # noqa: PLR0913, PLR0917
     axis: matplotlib.axes.Axes,
     stft_data: npt.NDArray,
     frequency_array: npt.NDArray,

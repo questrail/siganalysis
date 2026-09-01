@@ -21,6 +21,10 @@ This file contains all notable changes to the [siganalysis][] project.
   signatures instead of names that appear from nowhere. They still
   arrive through the module's `__getattr__` at run time, so a plain
   `import siganalysis` still does not import matplotlib.
+- The ruff rule set is selected explicitly in `pyproject.toml` rather
+  than left at the default, so that it is a deliberate choice. The
+  handful of places the new rules object to are deliberate, and each
+  carries a `noqa` saying so.
 - The license is declared as an SPDX expression with `license-files`,
   which is what replaced the `License ::` classifier that used to
   carry it.

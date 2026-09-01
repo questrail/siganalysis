@@ -38,6 +38,39 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/siganalysis"]
 
+[tool.ruff]
+line-length = 88
+
+[tool.ruff.lint]
+# Select rules explicitly rather than relying on ruff's defaults, so that the
+# rule set is a deliberate choice. The ruff version itself is pinned by uv.lock.
+select = [
+  "E",   # pycodestyle errors
+  "W",   # pycodestyle warnings
+  "F",   # pyflakes
+  "I",   # isort
+  "UP",  # pyupgrade
+  "B",   # flake8-bugbear
+  "SIM", # flake8-simplify
+  "EXE", # flake8-executable
+  "PL",  # pylint
+  "PT",  # flake8-pytest-style
+  "RUF", # ruff's own rules
+]
+
+[tool.ruff.lint.per-file-ignores]
+# A test asserts against the value it expects, which is the literal PLR2004
+# objects to. Naming each one would put a constant between the assertion and
+# what it claims. The rule still applies under src/, where the handful of
+# deliberate cases carry a noqa apiece.
+"tests/**" = ["PLR2004"]
+
+[tool.pytest.ini_options]
+# Collect the tests, and the examples in the docstrings so that an example
+# that stops working is a failing test rather than a surprise for a reader.
+addopts = "--doctest-modules"
+testpaths = ["tests", "src"]
+
 [tool.coverage.run]
 source = ["siganalysis"]
 branch = true
@@ -45,12 +78,6 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
-
-[tool.pytest.ini_options]
-# Collect the tests, and the examples in the docstrings so that an example
-# that stops working is a failing test rather than a surprise for a reader.
-addopts = "--doctest-modules"
-testpaths = ["tests", "src"]
 
 [tool.pyright]
 venvPath = "."

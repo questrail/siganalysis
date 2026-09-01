@@ -20,15 +20,15 @@ doc term:
 # Check lint, formatting, and types without modifying any files
 [group('test')]
 lint:
-  uv run ruff format --check
   uv run ruff check
+  uv run ruff format --check
   uv run pyright
 
 # Lint and format code and apply changes
 [group('test')]
 fix:
-  uv run ruff format
   uv run ruff check --fix
+  uv run ruff format
 
 # Test code using pytest
 [group('test')]

@@ -328,7 +328,7 @@ def smooth(
     if x.ndim != 1:
         raise ValueError("Function smooth only accepts 1D arrays.")
 
-    if window_len < 3:
+    if window_len < 3:  # noqa: PLR2004
         return x
 
     # If window_len is not odd, add one so that it is odd. This happens before
@@ -410,7 +410,7 @@ def _check_stft_data(
         IndexError: A vector does not describe the axis it is given for.
 
     """
-    if stft_data.ndim != 2:
+    if stft_data.ndim != 2:  # noqa: PLR2004
         raise ValueError(
             f"The STFT data needs to be 2D with a shape of (time, freq), but "
             f"it has {stft_data.ndim} dimension(s)."

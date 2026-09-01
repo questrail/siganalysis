@@ -56,7 +56,7 @@ def __getattr__(name: str) -> Any:
     cost of importing matplotlib is paid by whoever plots and by nobody else.
     """
     if name in _PLOTTING_NAMES:
-        from . import plotting
+        from . import plotting  # noqa: PLC0415
 
         return getattr(plotting, name)
     raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
