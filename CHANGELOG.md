@@ -5,6 +5,9 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ### Added
 
+- Python 3.14 to the classifiers and the CI matrix. The suite passes on
+  it, and nothing in the dependencies held it back; it was left out only
+  because the classifiers did not already name it.
 - Continuous integration on GitHub Actions, which this project had none
   of. Every push and pull request now lints, checks formatting, type
   checks, and runs the suite on 3.12 and 3.13, the versions the

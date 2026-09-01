@@ -154,8 +154,8 @@ versions they would produce rather than leaving the choice to memory.
 Answering `q`, or anything unrecognized, changes nothing.
 
 The tag push runs the [release workflow][], which waits on the whole [CI
-workflow][ci link] before it does anything else: the 3.12 and 3.13
-matrix and the dependency floor job. `git push --follow-tags` starts
+workflow][ci link] before it does anything else: the 3.12, 3.13, and
+3.14 matrix and the dependency floor job. `git push --follow-tags` starts
 both at once, so without that wait an upload could go out while a leg of
 the matrix was still running, or already red. It then checks that the
 tagged commit is on `master`, since a tag is only a pointer and one

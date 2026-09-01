@@ -47,7 +47,7 @@ jobs:
       matrix:
         # The versions the pyproject.toml classifiers claim. A version added
         # here belongs there too, and the other way round.
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.12", "3.13", "3.14"]
 
     steps:
       - name: Check out the repository
