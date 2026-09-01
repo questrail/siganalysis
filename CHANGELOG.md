@@ -7,6 +7,9 @@ This file contains all notable changes to the [siganalysis][] project.
 
 - `py.typed`, so that the type hints already written reach anyone
   installing the package rather than stopping at this repository.
+- A coverage floor of 95%, which is what the suite covers today. Below
+  that the run fails, so uncovered code has to arrive with either a
+  test or a deliberate edit to the floor.
 
 ### Changed
 

@@ -68,8 +68,8 @@ select = [
 [tool.pytest.ini_options]
 # Collect the tests, and the examples in the docstrings so that an example
 # that stops working is a failing test rather than a surprise for a reader.
-addopts = "--doctest-modules"
 testpaths = ["tests", "src"]
+addopts = ["--strict-markers", "--strict-config", "--doctest-modules"]
 
 [tool.coverage.run]
 source = ["siganalysis"]
@@ -78,6 +78,10 @@ branch = true
 [tool.coverage.report]
 show_missing = true
 exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+# A floor rather than a target: set at what the suite covers today, so that
+# uncovered code has to arrive with either a test or a deliberate edit to this
+# line. The gap is in plotting.py, which is the part hardest to assert on.
+fail_under = 95
 
 [tool.pyright]
 venvPath = "."
