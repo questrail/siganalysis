@@ -548,7 +548,9 @@ class TestPlotSpectrogram:
         spectrogram = siganalysis.plot_spectrogram(
             spectrogram_data, time_vector, freq_vector, axis
         )
-        assert spectrogram.get_array().shape == (freq_vector.size, time_vector.size)
+        plotted = spectrogram.get_array()
+        assert plotted is not None
+        assert plotted.shape == (freq_vector.size, time_vector.size)
 
     def test_plot_ranges_include_both_ends(
         self, spectrogram_data, time_vector, freq_vector, axis
@@ -564,6 +566,7 @@ class TestPlotSpectrogram:
             freq_plot_range=(4, 10),
         )
         plotted = spectrogram.get_array()
+        assert plotted is not None
         assert plotted.shape == (4, 4)
         # The array is transposed for plotting, so it is (freq, time).
         assert plotted[0][0] == 10 * 2 + 2
@@ -580,7 +583,9 @@ class TestPlotSpectrogram:
             time_plot_range=(-5, 99),
             freq_plot_range=(-5, 99),
         )
-        assert spectrogram.get_array().shape == (freq_vector.size, time_vector.size)
+        plotted = spectrogram.get_array()
+        assert plotted is not None
+        assert plotted.shape == (freq_vector.size, time_vector.size)
 
     def test_extent_puts_each_bin_center_on_its_own_value(
         self, spectrogram_data, time_vector, freq_vector, axis
@@ -594,7 +599,9 @@ class TestPlotSpectrogram:
             freq_plot_range=(4, 10),
         )
         left, right, bottom, top = spectrogram.get_extent()
-        num_freq_bins, num_time_bins = spectrogram.get_array().shape
+        plotted = spectrogram.get_array()
+        assert plotted is not None
+        num_freq_bins, num_time_bins = plotted.shape
 
         time_centers = [
             left + (bin + 0.5) * (right - left) / num_time_bins

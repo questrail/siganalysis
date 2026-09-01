@@ -17,16 +17,12 @@ loc:
 doc term:
   uv run python -m pydoc {{term}}
 
-# Type check using ty
-[group('test')]
-check:
-  uv run ty check
-
-# Lint and format code without making changes
+# Check lint, formatting, and types without modifying any files
 [group('test')]
 lint:
   uv run ruff format --check
   uv run ruff check
+  uv run pyright
 
 # Lint and format code and apply changes
 [group('test')]
@@ -84,7 +80,7 @@ lock:
 
 # Check, test, build, smoke test, publish to PyPI, and then tag
 [group('deploy')]
-deploy: release-check lint check test-all build smoke
+deploy: release-check lint test-all build smoke
   #!/usr/bin/env bash
   set -euo pipefail
   version="$(uv version --short)"

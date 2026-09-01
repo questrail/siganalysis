@@ -52,19 +52,20 @@ exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
 addopts = "--doctest-modules"
 testpaths = ["tests", "src"]
 
-[tool.ty.environment]
-# The project uses a src layout, so first-party modules live under src/.
-root = ["./src"]
-
-[tool.ty.src]
-include = ["src"]
+[tool.pyright]
+venvPath = "."
+venv = ".venv"
+include = ["src", "tests"]
 
 [dependency-groups]
 dev = [
     # The tests cover the plotting, so the extra is needed here.
     "matplotlib>=3.10.0",
+    "pyright>=1.1.411",
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.5",
-    "ty>=0.0.75",
+    # pyright cannot see the window functions in scipy.signal.windows without
+    # these; scipy ships no usable stubs of its own.
+    "scipy-stubs>=1.18.1.0",
 ]

@@ -2,7 +2,7 @@
 # Project site: https://github.com/questrail/siganalysis
 # Use of this source code is governed by a MIT-style license that
 # can be found in the LICENSE.txt file for the project.
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from .siganalysis import (
     STFT_WINDOWS,
@@ -17,6 +17,14 @@ from .siganalysis import (
     stft,
     time_slice_zip,
 )
+
+if TYPE_CHECKING:
+    # Imported for a type checker and an editor only, so that they see
+    # siganalysis.plot_spectrogram and siganalysis.plot_peak_hold with their
+    # real signatures rather than as names that appear from nowhere. At run
+    # time the two arrive through __getattr__ below, so this costs a plain
+    # import siganalysis nothing.
+    from .plotting import plot_peak_hold, plot_spectrogram
 
 # The plotting functions are not imported here, since importing them imports
 # matplotlib, which is only an optional dependency. They are reached through

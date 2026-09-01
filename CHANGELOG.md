@@ -10,6 +10,17 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ### Changed
 
+- Type checking is done by [pyright][] rather than [ty][], which is
+  still a 0.0.x release, and it runs inside `just lint` rather than as
+  a separate `just check` that every caller had to remember. Reaching
+  it through `lint` means `just build` and `just release` cannot skip
+  it. [scipy-stubs][] is a new dev dependency: without it pyright
+  cannot see the window functions in `scipy.signal.windows`.
+- `plot_spectrogram()` and `plot_peak_hold()` are declared to a type
+  checker under `TYPE_CHECKING`, so an editor offers their real
+  signatures instead of names that appear from nowhere. They still
+  arrive through the module's `__getattr__` at run time, so a plain
+  `import siganalysis` still does not import matplotlib.
 - The license is declared as an SPDX expression with `license-files`,
   which is what replaced the `License ::` classifier that used to
   carry it.
@@ -296,5 +307,7 @@ This file contains all notable changes to the [siganalysis][] project.
 [#15]: https://github.com/questrail/siganalysis/issues/15
 [#16]: https://github.com/questrail/siganalysis/issues/16
 [#17]: https://github.com/questrail/siganalysis/issues/17
+[pyright]: https://microsoft.github.io/pyright/
+[scipy-stubs]: https://github.com/scipy/scipy-stubs
 [siganalysis]: https://github.com/questrail/siganalysis
 [ty]: https://github.com/astral-sh/ty
