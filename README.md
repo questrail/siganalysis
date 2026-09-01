@@ -1,6 +1,9 @@
 # siganalysis
 
-[![PyPi Version][pypi ver image]][pypi ver link]
+[![PyPI Version][pypi ver image]][pypi ver link]
+[![Python Versions][pyversions image]][pypi ver link]
+[![CI Status][ci image]][ci link]
+[![Coverage Status][coveralls image]][coveralls link]
 [![License Badge][license image]][LICENSE.txt]
 
 Python (3.12+) routines for analyzing signals. Some of the functions include:
@@ -60,10 +63,11 @@ siganalysis.plot_peak_hold(axis, stft_data, freq_array)
 
 ## Release Notes
 
-Release notes describing what changed and what a caller has to update
-are posted to the [releases page][releases] and kept in
-[docs/releases][release notes]. The [CHANGELOG][] records every change,
-including the releases that predate those notes.
+The [CHANGELOG][] records every change, and each release posts its own
+section of it to the [releases page][releases]. That posting is done by
+the release workflow rather than by hand, so the CHANGELOG is the one
+place a change has to be written down. The longer notes kept in
+[docs/releases][release notes] cover v0.8.0, which predates that.
 
 
 ## Contributing
@@ -79,11 +83,16 @@ Contributions are welcome! To contribute please:
 
 ## Development Setup
 
-[siganalysis][] uses [uv][] to manage the virtualenv and dependencies, and
-[just][] as the task runner.
+[siganalysis][] uses [uv][] to manage the virtualenv and dependencies,
+and [just][] as the task runner.
 
-Use the following commands to create the virtualenv, install the dependencies
-(including the development group), and list the available [just][] recipes.
+```bash
+$ brew install uv just
+```
+
+With [uv][] and [just][] installed, `uv sync` creates the virtualenv and
+installs the dependencies, including the development group, and `just`
+on its own lists the available recipes.
 
 ```bash
 $ uv sync
@@ -94,49 +103,107 @@ The most common recipes are:
 
 ```bash
 $ just test    # Run the tests using pytest
-$ just fix     # Lint and format the code using ruff
+$ just lint    # Check lint, formatting, types, and workflows
+$ just fix     # Lint and format the code using ruff, applying fixes
+$ just cov     # Run the tests and report coverage
 $ just add X   # Add X as a dependency
 $ just out     # List the outdated dependencies
 ```
 
+[ruff][] and [pyright][] are deliberately absent from that `brew
+install` line. Both are dev dependencies pinned in `uv.lock` and reached
+through `uv run`, so every recipe and every CI job uses the same
+version. A `brew install ruff` would put a second, unpinned copy on the
+path for an editor to find, and ruff releases change how code is
+formatted: the editor would then reformat code that `ruff format
+--check` rejects on the next run.
+
 
 ## Making a Release
 
-Releasing is a single recipe, `just deploy`, which refuses to start
-unless everything it needs is in place. Prepare the release first:
-
-1. Bump the version with `uv version --bump minor`, which updates both
-   `pyproject.toml` and `uv.lock`.
-2. Add the entry for the new version to the [CHANGELOG][].
-3. Write the release notes as `docs/releases/vX.Y.Z.md`.
-4. Commit and push, since a release is not allowed to get ahead of the
-   repository.
+`just release` cuts the release. It first checks that a release is
+possible at all, then lints, type checks, and tests, then shows the
+entries waiting under Unreleased and the version each kind of bump would
+produce, and asks which to cut. Once answered it bumps the version,
+closes out the CHANGELOG, updates the lock file, commits, and tags.
+Pushing the tag is what publishes.
 
 ```bash
-$ uv version --bump minor
-$ git commit -am "Release vX.Y.Z"
-$ git push origin master
-$ just deploy
+$ just release
+
+Releasing from 0.8.0, with these entries under Unreleased:
+
+    ### Added
+
+    - `stft()` accepts a choice of window through its new `window` argument.
+
+    1) patch   0.8.0 -> 0.8.1
+    2) minor   0.8.0 -> 0.9.0
+    3) major   0.8.0 -> 1.0.0
+    q) cancel
+
+Which release? [1] 2
+
+Tagged v0.9.0. Publish it with:
+
+    git push --follow-tags
 ```
 
-`just deploy` confirms the tree is ready, lints, type checks, runs the
-tests against every supported Python, builds from a cleared `dist/`,
-installs the built wheel on its own to confirm that it imports, and then
-asks for a PyPI token and publishes. The tag is written and pushed only
-after PyPI accepts the upload, so that a tag is evidence a release
-shipped rather than evidence that one was attempted. Do not tag by hand.
+The entries decide the bump, so the prompt puts them next to the
+versions they would produce rather than leaving the choice to memory.
+Answering `q`, or anything unrecognized, changes nothing.
 
-Run `just release-check` on its own at any point to see which of those
-conditions is not yet met.
+The tag push runs the [release workflow][], which waits on the whole [CI
+workflow][ci link] before it does anything else: the 3.12 and 3.13
+matrix and the dependency floor job. `git push --follow-tags` starts
+both at once, so without that wait an upload could go out while a leg of
+the matrix was still running, or already red. It then checks that the
+tagged commit is on `master`, since a tag is only a pointer and one
+placed anywhere else would otherwise publish whatever it points at,
+rechecks the tag against the version in `pyproject.toml`, and builds.
 
-Finally, post the notes to the [releases page][releases]. The first line
-of the notes file is a heading that GitHub renders from the title
-already, so leave it out:
+Every check to that point runs against the source tree with matplotlib
+installed, so the workflow then installs the wheel it just built, without
+the `plotting` extra, somewhere `src/` is not on the path. That is the
+only step that can catch a packaging mistake which left something out of
+the distribution, and the only one that can tell whether matplotlib is
+still optional. It uploads once that passes. There is no PyPI API token
+anywhere: the workflow authenticates with [trusted publishing][], which
+mints a short lived credential from the GitHub OIDC identity of that
+run. That same identity signs a [PEP 740][] attestation for each
+distribution, which PyPI serves beside the file it attests: trusted
+publishing establishes who uploaded, and the attestation establishes
+what was uploaded and which workflow built it. The upload skips anything
+PyPI already holds, so a run that uploaded one distribution and then
+failed on the other can be retried instead of stranding a version number
+that PyPI will never allow to be reused.
 
-```bash
-$ tail -n +3 docs/releases/vX.Y.Z.md |
-    gh release create vX.Y.Z --title vX.Y.Z --notes-file -
-```
+Uploading is followed by a [GitHub release][releases] for the tag,
+carrying the CHANGELOG section for that version as its notes and the
+built distributions as its assets. The notes are collected before the
+upload rather than after, so that a CHANGELOG with no section for the
+version being released stops the release while stopping it is still
+possible.
+
+Pushing the tag is the point of no return, since PyPI never lets a
+version number be reused. Everything `just release` does is local and
+amendable until then, and it refuses to start against a dirty working
+tree, off `master`, on a `master` behind its upstream, with a CHANGELOG
+whose Unreleased section is empty, or when the tag it would create
+already exists. Those refusals come before the lint and test run, so a
+release that cannot happen is turned away at once rather than after the
+suite. `just release-check` runs them on their own, and a refusal leaves
+the version and the CHANGELOG untouched.
+
+`just build` runs the same checks and produces the same distributions
+without releasing anything, which is the way to inspect what CI would
+upload.
+
+This depends on one piece of configuration that lives outside the
+repository. A [trusted publisher][trusted publishing] has to be
+registered for `siganalysis` on PyPI, pointing at the
+`questrail/siganalysis` repository, the `release.yml` workflow, and the
+`pypi` environment. It is a one time setup per project.
 
 
 ## License
@@ -146,17 +213,27 @@ $ tail -n +3 docs/releases/vX.Y.Z.md |
 
 
 [CHANGELOG]: https://github.com/questrail/siganalysis/blob/master/CHANGELOG.md
-[just]: https://github.com/casey/just
+[ci image]: https://github.com/questrail/siganalysis/actions/workflows/ci.yml/badge.svg?branch=master
+[ci link]: https://github.com/questrail/siganalysis/actions/workflows/ci.yml
+[coveralls image]: https://coveralls.io/repos/github/questrail/siganalysis/badge.svg?branch=master
+[coveralls link]: https://coveralls.io/github/questrail/siganalysis?branch=master
+[just]: https://just.systems/
+[license image]: https://img.shields.io/pypi/l/siganalysis.svg
 [LICENSE.txt]: https://github.com/questrail/siganalysis/blob/master/LICENSE.txt
-[license image]: http://img.shields.io/pypi/l/siganalysis.svg
-[numpy]: http://www.numpy.org
 [matplotlib]: http://matplotlib.org
+[numpy]: http://www.numpy.org
+[PEP 740]: https://peps.python.org/pep-0740/
 [pull request]: https://help.github.com/articles/using-pull-requests
-[pypi ver image]: http://img.shields.io/pypi/v/siganalysis.svg
+[pypi ver image]: https://img.shields.io/pypi/v/siganalysis.svg
 [pypi ver link]: https://pypi.python.org/pypi/siganalysis/
+[pyright]: https://microsoft.github.io/pyright/
+[pyversions image]: https://img.shields.io/pypi/pyversions/siganalysis.svg
 [release notes]: https://github.com/questrail/siganalysis/tree/master/docs/releases
+[release workflow]: https://github.com/questrail/siganalysis/blob/master/.github/workflows/release.yml
 [releases]: https://github.com/questrail/siganalysis/releases
+[ruff]: https://docs.astral.sh/ruff/
 [scipy]: http://www.scipy.org
 [siganalysis]: https://github.com/questrail/siganalysis
 [stft]: http://en.wikipedia.org/wiki/Short-time_Fourier_transform
+[trusted publishing]: https://docs.pypi.org/trusted-publishers/
 [uv]: https://docs.astral.sh/uv/
