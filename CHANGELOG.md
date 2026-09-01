@@ -3,6 +3,11 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Removed
+
+- `AUTHORS.md`, along with the pointer to it in the copyright notice.
+  The repository history is the record of who wrote what.
+
 ## v0.8.0 - 2026-08-31
 
 ### Added
