@@ -34,6 +34,14 @@ Issues = "https://github.com/questrail/siganalysis/issues"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.coverage.run]
+source = ["siganalysis"]
+branch = true
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+
 [tool.pytest.ini_options]
 # Collect the tests, and the examples in the docstrings so that an example
 # that stops working is a failing test rather than a surprise for a reader.
@@ -52,6 +60,7 @@ dev = [
     # The tests cover the plotting, so the extra is needed here.
     "matplotlib>=3.10.0",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.5",
     "ty>=0.0.75",
 ]

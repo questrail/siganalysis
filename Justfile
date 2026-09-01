@@ -39,6 +39,11 @@ fix:
 test *args:
   uv run pytest {{args}}
 
+# Test code and report coverage
+[group('test')]
+cov *args:
+  uv run pytest --cov --cov-report=term --cov-report=html {{args}}
+
 # Test code using pytest on every supported Python
 [group('test')]
 test-all:
