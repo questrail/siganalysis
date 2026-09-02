@@ -90,7 +90,21 @@ addopts = ["--strict-markers", "--strict-config", "--doctest-modules"]
 # A numpy or stdlib deprecation is how this breaks across the 3.12 - 3.14 the
 # classifiers claim. Left as a warning it scrolls past in a green run; as an
 # error it fails the run that introduced it.
-filterwarnings = ["error"]
+filterwarnings = [
+    "error",
+    # matplotlib reaches pyparsing, which nothing here imports or calls, and
+    # pyparsing's warnings are pyparsing's to fix. Two of them reach the
+    # suite: Python 3.14 warns about a `return` inside a `finally` in
+    # pyparsing's source, and the oldest matplotlib this project allows still
+    # calls pyparsing's pre-snake_case names, each of which warns
+    # "'<old>' deprecated - use '<new>'". Failing on either says nothing about
+    # this code, and a suite that fails for reasons of its own stops being
+    # read. Warnings from here are still errors, and ruff holds this code to
+    # the same two rules: B012 for the jump out of a finally, UP for calling
+    # anything deprecated.
+    "default::SyntaxWarning",
+    "default:.* deprecated - use .*:DeprecationWarning",
+]
 # An xfail that starts passing is a test no longer checking what it says.
 xfail_strict = true
 
