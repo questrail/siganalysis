@@ -56,6 +56,21 @@ select = [
   "EXE", # flake8-executable
   "PL",  # pylint
   "PT",  # flake8-pytest-style
+  "NPY", # numpy-specific rules
+  "C4",  # flake8-comprehensions
+  "FURB",# refurb
+  "PERF",# perflint
+  "RET", # flake8-return
+  "ARG", # flake8-unused-arguments
+  "PIE", # flake8-pie
+  "ISC", # flake8-implicit-str-concat
+  "RSE", # flake8-raise
+  "A",   # flake8-builtins
+  "N",   # pep8-naming
+  "G",   # flake8-logging-format
+  "LOG", # flake8-logging
+  "Q",   # flake8-quotes
+  "S",   # flake8-bandit
   "RUF", # ruff's own rules
 ]
 
@@ -64,13 +79,20 @@ select = [
 # objects to. Naming each one would put a constant between the assertion and
 # what it claims. The rule still applies under src/, where the handful of
 # deliberate cases carry a noqa apiece.
-"tests/**" = ["PLR2004"]
+# S101 objects to `assert`, which is how a pytest suite states what it checks.
+"tests/**" = ["PLR2004", "S101"]
 
 [tool.pytest.ini_options]
 # Collect the tests, and the examples in the docstrings so that an example
 # that stops working is a failing test rather than a surprise for a reader.
 testpaths = ["tests", "src"]
 addopts = ["--strict-markers", "--strict-config", "--doctest-modules"]
+# A numpy or stdlib deprecation is how this breaks across the 3.12 - 3.14 the
+# classifiers claim. Left as a warning it scrolls past in a green run; as an
+# error it fails the run that introduced it.
+filterwarnings = ["error"]
+# An xfail that starts passing is a test no longer checking what it says.
+xfail_strict = true
 
 [tool.coverage.run]
 source = ["siganalysis"]
@@ -81,7 +103,9 @@ relative_files = true
 
 [tool.coverage.report]
 show_missing = true
-exclude_lines = ["pragma: no cover", "if TYPE_CHECKING:"]
+# exclude_also adds to coverage's built-in exclusions; exclude_lines would
+# replace them, which means restating the pragma pattern to keep it working.
+exclude_also = ["if TYPE_CHECKING:"]
 # A floor rather than a target: set at what the suite covers today, so that
 # uncovered code has to arrive with either a test or a deliberate edit to this
 # line. The gap is in plotting.py, which is the part hardest to assert on.

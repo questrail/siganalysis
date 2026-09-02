@@ -604,12 +604,12 @@ class TestPlotSpectrogram:
         num_freq_bins, num_time_bins = plotted.shape
 
         time_centers = [
-            left + (bin + 0.5) * (right - left) / num_time_bins
-            for bin in range(num_time_bins)
+            left + (index + 0.5) * (right - left) / num_time_bins
+            for index in range(num_time_bins)
         ]
         freq_centers = [
-            bottom + (bin + 0.5) * (top - bottom) / num_freq_bins
-            for bin in range(num_freq_bins)
+            bottom + (index + 0.5) * (top - bottom) / num_freq_bins
+            for index in range(num_freq_bins)
         ]
         assert time_centers == pytest.approx(list(time_vector[2:6]))
         assert freq_centers == pytest.approx(list(freq_vector[2:6]))
@@ -884,7 +884,9 @@ class TestPackageLayout:
     def _run(self, code: str) -> str:
         # A subprocess, because this test session has already imported
         # matplotlib and sys.modules cannot be un-imported reliably.
-        result = subprocess.run(
+        result = subprocess.run(  # noqa: S603
+            # The command is this interpreter and a string literal written in
+            # the test beside it, so there is no untrusted input to check.
             [sys.executable, "-c", textwrap.dedent(code)],
             capture_output=True,
             text=True,
