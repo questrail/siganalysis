@@ -1,7 +1,37 @@
 # CHANGELOG.md
+
 This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
+
+### Added
+
+- Ignore `.pypirc`. A copy holding a PyPI username and password predates the
+  move to trusted publishing, which mints a short lived credential per
+  release and leaves nothing on disk; nothing here needs the file, and
+  ignoring it keeps a leftover from being committed by accident.
+
+### Changed
+
+- `just build` and `just release` depend on `cov` rather than `test`. CI runs
+  pytest under coverage and fails below the `fail_under` floor in
+  `pyproject.toml`, so the bare suite these recipes ran left that gate as one
+  they never applied: a tree that passed locally could still be rejected on
+  push, and `just release` could tag a version CI would then refuse to publish.
+- Move the pytest floor to 9.0.3, matching the other questrail projects. The
+  suite was verified against that version before the floor moved.
+- Rename the README's "Making a Release" to "Releasing to PyPI" and nest it
+  under "Development Setup", which is where every other questrail project
+  keeps it.
+
+### Removed
+
+- **Breaking:** `siganalysis.__version__`. It was never read inside the
+  package, only exported, and `importlib.metadata.version("siganalysis")` has
+  been the stdlib way to ask since 3.8, well below the 3.12 floor. It cost
+  nothing measurable here, since scipy loads `importlib.metadata` anyway, but
+  it duplicated what `pyproject.toml` already records. Read the version with
+  `importlib.metadata.version("siganalysis")`.
 
 ## v0.9.0 - 2026-09-01
 

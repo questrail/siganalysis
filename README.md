@@ -127,7 +127,7 @@ formatted: the editor would then reformat code that `ruff format
 --check` rejects on the next run.
 
 
-## Making a Release
+### Releasing to PyPI
 
 `just release` cuts the release. It first checks that a release is
 possible at all, then lints, type checks, and tests, then shows the

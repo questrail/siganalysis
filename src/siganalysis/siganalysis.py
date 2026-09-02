@@ -11,15 +11,12 @@ spectrogram, calculating the peak hold values for an STFT, etc.
 
 # Standard module imports
 import math
-from importlib.metadata import version
 
 # Numerical analysis related imports
 import numpy as np
 import numpy.typing as npt
 from scipy import signal
 from scipy.fft import fft
-
-__version__ = version("siganalysis")
 
 
 def time_slice_zip(

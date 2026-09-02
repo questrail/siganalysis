@@ -70,8 +70,12 @@ lock:
   uv lock
 
 # Check, test, and build the distributions that CI will publish
+#
+# Depends on cov rather than on test because CI runs pytest under coverage and
+# fails below the fail_under floor in pyproject.toml. Running the bare suite
+# here left the gate that gets a push rejected as one this recipe never applied.
 [group('deploy')]
-build: lint test
+build: lint cov
   #!/usr/bin/env bash
   set -euo pipefail
   uv build --clear
@@ -109,8 +113,12 @@ release-check:
   echo "Ready to release from $(uv version --short)."
 
 # Cut a release
+#
+# Depends on cov rather than on test for the same reason build does: a tag is
+# pushed on the strength of what these recipes checked, and coverage is one of
+# the gates CI applies before it will publish that tag.
 [group('deploy')]
-release: release-check lint test
+release: release-check lint cov
   #!/usr/bin/env bash
   set -euo pipefail
   # release-check runs first, as a dependency, so that a dirty tree or an

@@ -7,7 +7,6 @@ from typing import TYPE_CHECKING, Any
 from .siganalysis import (
     STFT_WINDOWS,
     WINDOW_FUNCTIONS,
-    __version__,
     calculate_peak_hold,
     freq_bin,
     hz2khz,
@@ -35,7 +34,6 @@ _PLOTTING_NAMES = frozenset({"plot_peak_hold", "plot_spectrogram"})
 __all__ = [
     "STFT_WINDOWS",
     "WINDOW_FUNCTIONS",
-    "__version__",
     "calculate_peak_hold",
     "freq_bin",
     "hz2khz",

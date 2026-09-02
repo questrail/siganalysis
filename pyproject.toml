@@ -97,7 +97,7 @@ dev = [
     # The tests cover the plotting, so the extra is needed here.
     "matplotlib>=3.10.0",
     "pyright>=1.1.411",
-    "pytest>=9.1.1",
+    "pytest>=9.0.3",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.5",
     # pyright cannot see the window functions in scipy.signal.windows without
