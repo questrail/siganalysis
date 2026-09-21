@@ -4,6 +4,8 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+## v0.10.0 - 2026-09-21
+
 ### Fixed
 
 - `stft()` transforms the frame that ends on the final sample. The frame loop
