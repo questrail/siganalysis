@@ -207,18 +207,60 @@ class TestShortTimeFourierTransform:
         assert list(time_array_stft) == pytest.approx(expected)
 
     def test_input_shorter_than_one_frame(self):
-        with pytest.raises(IndexError, match="longer than"):
+        with pytest.raises(IndexError, match="at least"):
             siganalysis.stft(
                 np.zeros(100), SAMPLING_RATE_HZ, FRAME_SIZE_SEC, HOP_SIZE_SEC
             )
 
     def test_input_exactly_one_frame(self):
-        # A frame is taken only while the start index is short of the end of
-        # the signal, so a signal exactly one frame long yields no frames.
-        with pytest.raises(IndexError, match="longer than"):
-            siganalysis.stft(
-                np.zeros(SAMPLING_RATE_HZ), SAMPLING_RATE_HZ, 1, HOP_SIZE_SEC
+        # A frame is taken wherever a whole one fits, so a signal exactly one
+        # frame long holds exactly one frame to transform.
+        data_stft, time_array_stft, *_ = siganalysis.stft(
+            np.zeros(SAMPLING_RATE_HZ), SAMPLING_RATE_HZ, 1, HOP_SIZE_SEC
+        )
+        assert data_stft.shape[0] == 1
+        assert time_array_stft == pytest.approx([0])
+
+    def test_stft_transforms_every_whole_frame(self):
+        # A signal holding a whole number of hops past its first frame yields
+        # a frame at every one of them, including the frame that ends on the
+        # final sample. Skipping that last frame used to leave up to a hop of
+        # the signal untransformed at the end of every recording.
+        sampling_rate_hz = 1000
+        frame_size_sec = 0.1
+        hop_size_sec = 0.02
+        num_frame_samples = int(frame_size_sec * sampling_rate_hz)
+        num_hop_samples = int(hop_size_sec * sampling_rate_hz)
+        num_hops_past_the_first_frame = 20
+        num_samples = num_frame_samples + num_hops_past_the_first_frame * (
+            num_hop_samples
+        )
+
+        data_stft, time_array_stft, *_ = siganalysis.stft(
+            np.zeros(num_samples), sampling_rate_hz, frame_size_sec, hop_size_sec
+        )
+
+        assert data_stft.shape[0] == num_hops_past_the_first_frame + 1
+        # The last frame starts a frame short of the end and so covers the
+        # final sample.
+        last_frame_start = time_array_stft[-1] * sampling_rate_hz
+        assert last_frame_start == pytest.approx(num_samples - num_frame_samples)
+
+    def test_stft_leaves_less_than_a_hop_untransformed(self):
+        # Whatever the length, the samples past the last frame are fewer than
+        # one hop; any more would have made room for another whole frame.
+        sampling_rate_hz = 1000
+        frame_size_sec = 0.1
+        hop_size_sec = 0.02
+        num_frame_samples = int(frame_size_sec * sampling_rate_hz)
+        num_hop_samples = int(hop_size_sec * sampling_rate_hz)
+
+        for num_samples in range(num_frame_samples, num_frame_samples + 50):
+            data_stft, *_ = siganalysis.stft(
+                np.zeros(num_samples), sampling_rate_hz, frame_size_sec, hop_size_sec
             )
+            covered = (data_stft.shape[0] - 1) * num_hop_samples + num_frame_samples
+            assert 0 <= num_samples - covered < num_hop_samples
 
     def test_frame_shorter_than_one_sample(self, two_tone_signal):
         with pytest.raises(ValueError, match="frame is shorter than one sample"):
@@ -934,7 +976,7 @@ class TestPackageLayout:
             data, *_ = siganalysis.stft(np.zeros(1000), 1000, 0.1, 0.1)
             print(data.shape[0])
             """)
-            == "9"
+            == "10"
         )
 
     def test_plotting_without_matplotlib_says_what_to_install(self):

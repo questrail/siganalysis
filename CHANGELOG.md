@@ -4,6 +4,19 @@ This file contains all notable changes to the [siganalysis][] project.
 
 ## Unreleased
 
+### Fixed
+
+- `stft()` transforms the frame that ends on the final sample. The frame loop
+  stopped one index short of `len(input_data) - num_frame_samples`, so the
+  last whole frame of every signal was skipped and up to one hop of the
+  recording went untransformed --- 0.167 sec of each slice in the WG.001 OCTA
+  inductive emissions analysis, where a peak hold over the result simply never
+  held whatever happened in those samples. Nothing downstream could detect the
+  omission, since the returned time vector described only the frames taken.
+- `stft()` accepts a signal exactly one frame long, which holds one whole
+  frame and now returns it rather than raising `IndexError`. A signal shorter
+  than a frame is still turned away.
+
 ### Added
 
 - Ignore `.pypirc`. A copy holding a PyPI username and password predates the

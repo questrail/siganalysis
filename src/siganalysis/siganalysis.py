@@ -170,8 +170,8 @@ def stft(
         ValueError: The frame size or the hop size is shorter than one
             sample at the given sampling frequency, or the window is not
             one that STFT_WINDOWS names.
-        IndexError: The input_data is not longer than one frame, so there
-            is nothing to transform.
+        IndexError: The input_data is shorter than one frame, so there is
+            nothing to transform.
 
     """
     num_frame_samples = int(frame_size_sec * sampling_frequency_hz)
@@ -186,9 +186,9 @@ def stft(
             f"A {hop_size_sec} sec hop is shorter than one sample at "
             f"{sampling_frequency_hz} Hz."
         )
-    if len(input_data) <= num_frame_samples:
+    if len(input_data) < num_frame_samples:
         raise IndexError(
-            f"The input_data needs to be longer than the {num_frame_samples} "
+            f"The input_data needs to hold at least the {num_frame_samples} "
             f"samples in a {frame_size_sec} sec frame, but it contains "
             f"{len(input_data)} samples."
         )
@@ -206,10 +206,17 @@ def stft(
         # back the amplitudes an unwindowed frame would have given.
         window_samples = STFT_WINDOWS[window](num_frame_samples)
         window_samples = window_samples / window_samples.mean()
+    # A frame is taken wherever a whole one fits, so the last frame is the one
+    # starting at len(input_data) - num_frame_samples. Stopping short of that
+    # index, as this did until the bound gained its + 1, dropped the frame
+    # ending on the final sample and left up to one hop of the signal at the
+    # end of every recording untransformed. Nothing downstream could see that
+    # those samples had been skipped: a peak hold over the result simply never
+    # held whatever happened in them.
     x = np.array(
         [
             fft(window_samples * input_data[i : i + num_frame_samples])
-            for i in range(0, len(input_data) - num_frame_samples, num_hop_samples)
+            for i in range(0, len(input_data) - num_frame_samples + 1, num_hop_samples)
         ]
     )
 
